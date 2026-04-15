@@ -1,15 +1,15 @@
 import { createBrowserRouter } from "react-router";
-import { HomeRestored } from "./components/HomeRestored";
+import { HomeNavFixed } from "./components/HomeNavFixed";
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
-import { CreateStoryLight } from "./components/CreateStoryLight";
-import { StoryDetail } from "./components/StoryDetail";
+import { CreateStoryFixed } from "./components/CreateStoryFixed";
+import { StoryDetailFixed } from "./components/StoryDetailFixed";
 import { VoiceSelection } from "./components/VoiceSelection";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: HomeRestored,
+    Component: HomeNavFixed,
   },
   {
     path: "/login",
@@ -21,11 +21,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/create",
-    Component: CreateStoryLight,
+    Component: CreateStoryFixed,
   },
   {
     path: "/story/:id",
-    Component: StoryDetail,
+    Component: StoryDetailFixed,
   },
   {
     path: "/voice/:id",
