@@ -2,8 +2,8 @@ import { createBrowserRouter } from "react-router";
 import { HomeModalDismiss } from "./components/HomeModalDismiss";
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
-import { CreateStoryFixed } from "./components/CreateStoryFixed";
-import { StoryDetailSynced } from "./components/StoryDetailSynced";
+import { CreateStoryWideClean } from "./components/CreateStoryWideClean";
+import { StoryDetailLogoSynced } from "./components/StoryDetailLogoSynced";
 import { VoiceSelectionFixed } from "./components/VoiceSelectionFixed";
 
 export const router = createBrowserRouter([
@@ -21,11 +21,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/create",
-    Component: CreateStoryFixed,
+    Component: CreateStoryWideClean,
   },
   {
     path: "/story/:id",
-    Component: StoryDetailSynced,
+    Component: StoryDetailLogoSynced,
   },
   {
     path: "/voice/:id",
