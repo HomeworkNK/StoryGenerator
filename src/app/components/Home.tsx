@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useNavigate } from "react-router";
 import { BookOpen, Plus, User, Edit, Save, X, LogOut, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -26,12 +25,6 @@ export function Home() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [passwordForm, setPasswordForm] = useState({
-    oldPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [passwordMessage, setPasswordMessage] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -101,34 +94,26 @@ export function Home() {
   };
 
   const handleSaveUser = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     setLoading(true);
     setError("");
-    setPasswordMessage("");
 
     try {
-      const nextUser = {
-        ...(user || {}),
-        username: editingUser.username,
-        email: editingUser.email,
-        avatar: editingUser.avatar,
-        bio: editingUser.bio
-      };
+      const response = await api.user.updateInfo(
+        {
+          email: editingUser.email,
+          avatar: editingUser.avatar
+        },
+        token
+      );
 
-      if (passwordForm.oldPassword || passwordForm.newPassword || passwordForm.confirmPassword) {
-        if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-          setError("请完整填写密码信息");
-          return;
-        }
-        if (passwordForm.newPassword.length < 6) {
-          setError("新密码至少 6 位");
-          return;
-        }
-        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-          setError("两次输入的新密码不一致");
-          return;
-        }
-        setPasswordMessage("密码已在前端模拟更新");
-      }
+      if (response.success) {
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        setShowUserModal(false);
+      } else {
         setError(response.message || "修改失败");
       }
     } catch (err) {
