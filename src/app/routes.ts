@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { HomeModalDismiss } from "./components/HomeModalDismiss";
-import { LoginPage } from "./components/LoginPage";
-import { RegisterPage } from "./components/RegisterPage";
+import { LoginCentered } from "./components/LoginCentered";
+import { RegisterCentered } from "./components/RegisterCentered";
 import { CreateStoryWideClean } from "./components/CreateStoryWideClean";
 import { StoryDetailLogoSynced } from "./components/StoryDetailLogoSynced";
 import { VoiceSelectionFixed } from "./components/VoiceSelectionFixed";
@@ -13,11 +13,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/login",
-    Component: LoginPage,
+    Component: LoginCentered,
   },
   {
     path: "/register",
-    Component: RegisterPage,
+    Component: RegisterCentered,
   },
   {
     path: "/create",
