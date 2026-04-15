@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
-import { Home } from "./components/Home";
-import { Login } from "./components/Login";
-import { Register } from "./components/Register";
+import { HomeFixed } from "./components/HomeFixed";
+import { LoginPage } from "./components/LoginPage";
+import { RegisterPage } from "./components/RegisterPage";
 import { CreateStory } from "./components/CreateStory";
 import { StoryDetail } from "./components/StoryDetail";
 import { VoiceSelection } from "./components/VoiceSelection";
@@ -9,15 +9,15 @@ import { VoiceSelection } from "./components/VoiceSelection";
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: Home,
+    Component: HomeFixed,
   },
   {
     path: "/login",
-    Component: Login,
+    Component: LoginPage,
   },
   {
     path: "/register",
-    Component: Register,
+    Component: RegisterPage,
   },
   {
     path: "/create",
