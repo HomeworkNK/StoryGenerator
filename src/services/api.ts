@@ -365,6 +365,25 @@ export const api = {
 
     uploadAudio: (data: FormData, token: string) =>
       (async (): Promise<ApiResult<string>> => {
+        const username = extractUsernameFromToken(token) || "guest";
+        const voiceName = ((data.get("voiceName") as string) || "自定义音色").trim();
+        const upsertLocalVoice = (voiceId: string) => {
+          const voices = getMockVoices();
+          const idx = voices.findIndex((v) => v.voiceId === voiceId);
+          const nextVoice: MockVoice = {
+            voiceId,
+            voiceName,
+            default: false,
+            username,
+          };
+          if (idx >= 0) {
+            voices[idx] = { ...voices[idx], ...nextVoice };
+          } else {
+            voices.push(nextVoice);
+          }
+          saveMockVoices(voices);
+        };
+
         const backendRes = await requestJson<string>("/user/audio", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -372,21 +391,12 @@ export const api = {
         });
 
         if (backendRes?.code === 200 && backendRes.data) {
+          upsertLocalVoice(backendRes.data);
           return ok(backendRes.data, backendRes.message || "创建成功");
         }
 
-        const username = extractUsernameFromToken(token) || "guest";
-        const voiceName = ((data.get("voiceName") as string) || "自定义音色").trim();
-        const voices = getMockVoices();
         const voiceId = generateId("voice");
-
-        voices.push({
-          voiceId,
-          voiceName,
-          default: false,
-          username,
-        });
-        saveMockVoices(voices);
+        upsertLocalVoice(voiceId);
 
         return ok(voiceId, "创建成功");
       })(),
@@ -402,8 +412,6 @@ export const api = {
           body: JSON.stringify(data),
         });
 
-        if (backendRes?.code === 200) return ok(undefined, backendRes.message || "修改成功");
-
         const voices = getMockVoices();
         const idx = voices.findIndex((v) => v.voiceId === data.voiceId);
         if (idx >= 0) {
@@ -411,6 +419,7 @@ export const api = {
           saveMockVoices(voices);
         }
 
+        if (backendRes?.code === 200) return ok(undefined, backendRes.message || "修改成功");
         return ok(undefined, "修改成功");
       })(),
 
@@ -421,12 +430,23 @@ export const api = {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        const username = extractUsernameFromToken(token) || "guest";
+        const localVoices = getMockVoices().filter((v) => v.username === username || v.default);
+
         if (backendRes?.code === 200 && Array.isArray(backendRes.data)) {
-          return ok(backendRes.data, backendRes.message || "获取成功");
+          const merged = [...backendRes.data];
+          for (const lv of localVoices) {
+            const idx = merged.findIndex((v) => v.voiceId === lv.voiceId);
+            if (idx >= 0) {
+              merged[idx] = { ...merged[idx], ...lv };
+            } else {
+              merged.push(lv);
+            }
+          }
+          return ok(merged, backendRes.message || "获取成功");
         }
 
-        const username = extractUsernameFromToken(token) || "guest";
-        const voices = getMockVoices().filter((v) => v.username === username || v.default);
+        const voices = localVoices;
 
         if (voices.length > 0) return ok(voices, "获取成功");
 

@@ -32,6 +32,7 @@ export function VoiceLab() {
   const [editingVoiceId, setEditingVoiceId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [pendingDeleteVoiceId, setPendingDeleteVoiceId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -116,7 +117,7 @@ export function VoiceLab() {
     try {
       const formData = new FormData();
       formData.append("audio", audioFile);
-      formData.append("voiceName", recordingName || `克隆音色${Date.now()}`);
+      formData.append("voiceName", recordingName.trim() || `克隆音色${Date.now()}`);
 
       const response = await api.user.uploadAudio(formData, token);
       if (response.success) {
@@ -147,7 +148,6 @@ export function VoiceLab() {
       setError("请先登录");
       return;
     }
-    if (!confirm("确定要删除这个音色吗？")) return;
 
     setLoading(true);
     setError("");
@@ -164,6 +164,16 @@ export function VoiceLab() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const confirmDeleteVoice = (voiceId: string) => {
+    setPendingDeleteVoiceId(voiceId);
+  };
+
+  const handleConfirmDeleteVoice = async () => {
+    if (!pendingDeleteVoiceId) return;
+    await handleDeleteVoice(pendingDeleteVoiceId);
+    setPendingDeleteVoiceId(null);
   };
 
   const handleStartEdit = (voice: VoiceSample) => {
@@ -226,6 +236,22 @@ export function VoiceLab() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-white">
       <AppHeader activeTab="voice" />
+      {pendingDeleteVoiceId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4" onClick={() => setPendingDeleteVoiceId(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-[#8a78b7]/30 bg-[#111209] p-5 shadow-2xl shadow-black/40" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-2 text-lg font-semibold text-[#ede8ff]">删除音色</h3>
+            <p className="mb-5 text-sm text-[#b8afdf]">确定要删除这个音色吗？此操作不可撤销。</p>
+            <div className="flex gap-3">
+              <button onClick={() => setPendingDeleteVoiceId(null)} className="flex-1 rounded-lg border border-[#63549f]/45 bg-[#231c40]/70 px-4 py-2 text-sm text-[#ede8ff] transition-colors hover:bg-[#2f2750]">
+                取消
+              </button>
+              <button onClick={handleConfirmDeleteVoice} className="flex-1 rounded-lg bg-red-500/85 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500">
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto max-w-7xl px-6 py-12">
         <div className="mb-8">
@@ -394,7 +420,7 @@ export function VoiceLab() {
                             <Edit2 className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteVoice(voice.voiceId)}
+                            onClick={() => confirmDeleteVoice(voice.voiceId)}
                             disabled={voice.default || loading}
                             className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#312752] text-red-400 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-30"
                             title="删除音色"
