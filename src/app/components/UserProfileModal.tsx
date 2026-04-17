@@ -1,5 +1,6 @@
 import { KeyRound, LogOut, Save, User, X } from "lucide-react";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
 import { api } from "../../services/api";
 
@@ -154,8 +155,8 @@ export function UserProfileModal({ open, onClose }: { open: boolean; onClose: ()
     reader.readAsDataURL(file);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8" onClick={closeModal}>
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 py-8" onClick={closeModal}>
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#8a78b7]/30 bg-[#111209] p-6 shadow-2xl shadow-black/30" onClick={(e) => e.stopPropagation()}>
         <div className="mb-6 text-center">
           <div className="relative mx-auto mb-4 h-20 w-20">
@@ -189,6 +190,7 @@ export function UserProfileModal({ open, onClose }: { open: boolean; onClose: ()
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

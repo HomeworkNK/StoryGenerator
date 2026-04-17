@@ -42,14 +42,13 @@ export function RegisterCentered() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#111209_0%,#231c40_52%,#111209_100%)] px-6 py-10 text-white">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl items-center justify-center">
-        <div className="w-full max-w-md rounded-[28px] border border-[#8a78b7]/25 bg-[#111209]/82 p-8 shadow-2xl shadow-black/30 backdrop-blur-md">
-          <div className="mb-8 text-center">
+        <div className="w-full max-w-sm rounded-[24px] border border-[#8a78b7]/25 bg-[#111209]/82 p-6 shadow-2xl shadow-black/30 backdrop-blur-md">
+          <div className="mb-6 text-center">
             <Link to="/" className="mb-6 inline-flex items-center gap-2">
               <BookOpen className="h-8 w-8 text-[#d8ddff]" />
               <span className="text-xl font-semibold text-[#ede8ff]">故事创作平台</span>
             </Link>
-            <h2 className="text-3xl font-semibold text-white">注册</h2>
-            <p className="mt-2 text-sm text-[#b8afdf]">创建账号后即可进入首页与个人资料编辑页</p>
+            <h2 className="text-2xl font-semibold text-white">注册</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
