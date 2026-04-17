@@ -77,7 +77,7 @@ export function HomeRestored() {
     if (token) {
       const fetchUserInfo = async () => {
         try {
-          const response = await api.user.getInfo(token);
+          const response = await api.user.getProfile(token);
           if (response.success) {
             const nextUser = normalizeUser(response.user);
             setUser(nextUser);
@@ -140,8 +140,9 @@ export function HomeRestored() {
     const nextUser = normalizeUser(editingUser);
 
     try {
-      const response = await api.user.updateInfo(
+      const response = await api.user.updateProfile(
         {
+          username: nextUser.username,
           email: nextUser.email,
           avatar: nextUser.avatar,
         },
@@ -233,7 +234,7 @@ export function HomeRestored() {
           <div className="flex items-center gap-6">
             <Link to="/" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">书藏馆</Link>
             <Link to="/" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">创作工坊</Link>
-            <Link to="/" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">声音实验室</Link>
+            <Link to="/voice-lab" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">声音实验室</Link>
             <span className="text-sm text-[#a7a8b7]">{displayUser.username}</span>
 
             <button
@@ -405,7 +406,8 @@ export function HomeRestored() {
 
         <div className="relative z-10 flex flex-col items-center justify-between md:flex-row">
           <div className="mb-8 md:mb-0 md:w-1/2">
-            <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">NEW FEATURE</span>
+            {/* <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">NEW FEATURE</span> */}
+            <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">梦境编织者</span>
             <h1 className="mb-4 text-4xl font-bold md:text-5xl">
               AI 合成
               <br />

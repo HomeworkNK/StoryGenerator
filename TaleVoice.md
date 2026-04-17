@@ -1,0 +1,1672 @@
+---
+title: 默认模块
+language_tabs:
+  - shell: Shell
+  - http: HTTP
+  - javascript: JavaScript
+  - ruby: Ruby
+  - python: Python
+  - php: PHP
+  - java: Java
+  - go: Go
+toc_footers: []
+includes: []
+search: true
+code_clipboard: true
+highlight_theme: darkula
+headingLevel: 2
+generator: "@tarslib/widdershins v4.0.30"
+
+---
+
+# 默认模块
+
+TaleVoice 项目数据模型，基于 PostgreSQL 数据库表结构
+
+Base URLs:
+
+# Authentication
+
+- HTTP Authentication, scheme: bearer
+
+# Default
+
+## POST 克隆音频样本上传
+
+POST /api/user/audio
+
+> Body 请求参数
+
+```yaml
+audio: ""
+voiceName: 妈妈的声音
+
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|说明|
+|---|---|---|---|---|
+|body|body|object| 是 |none|
+|» audio|body|string(binary)| 否 |要克隆的音频文件|
+|» voiceName|body|string| 否 |自定义音色名称|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "创建成功",
+  "data": "voice-01"
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|string|true|none|音频样本ID|none|
+
+## PUT 修改克隆音频样本名称
+
+PUT /api/user/audio
+
+> Body 请求参数
+
+```json
+{
+  "voiceId": "string",
+  "voiceName": "string"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|body|body|object| 是 ||none|
+|» voiceId|body|string| 是 | 音频ID|none|
+|» voiceName|body|string| 是 | 自定义音色名称|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "修改成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## GET 获取克隆音频样本列表
+
+GET /api/user/audio
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 0,
+  "message": "string",
+  "data": [
+    {
+      "voiceId": "string",
+      "voiceName": "string",
+      "default": true
+    }
+  ]
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|[object]|true|none|克隆音频样本列表|none|
+|»» voiceId|string|true|none|音频ID|none|
+|»» voiceName|string|true|none|自定义音色名称|none|
+|»» default|boolean|true|none|是否为系统自带音色|none|
+
+## DELETE 克隆音频样本删除
+
+DELETE /api/user/audio/{voiceId}
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|voiceId|path|string| 是 ||none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## POST 用户注册
+
+POST /api/user/register
+
+> Body 请求参数
+
+```json
+{
+  "username": "zhangsan",
+  "password": "123456",
+  "email": "zhangsan@example.com"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|body|body|object| 是 ||none|
+|» username|body|string| 是 | 昵称|none|
+|» password|body|string| 是 | 密码|SHA-256加密发送|
+|» email|body|string| 是 | 邮箱|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "注册成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none|响应码|后端自定义响应码|
+|» message|string|true|none|响应消息|后端对code的说明|
+|» data|null|true|none||none|
+
+## POST 用户登录
+
+POST /api/user/login
+
+> Body 请求参数
+
+```json
+{
+  "username": "zhangsan",
+  "password": "123456"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|body|body|object| 是 ||none|
+|» username|body|string| 是 | 昵称|none|
+|» password|body|string| 是 | 密码|SHA-256加密发送|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "登录成功",
+  "data": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|string|true|none|登录令牌|jwt令牌|
+
+## POST 用户登出
+
+POST /api/user/logout
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "登出成功"
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## GET 获取个人信息
+
+GET /api/user/profile
+
+> Body 请求参数
+
+```yaml
+{}
+
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "userId": "1001",
+    "username": "zhangsan",
+    "email": "zhangsan@example.com",
+    "avatar": "https://example.com/avatar.jpg",
+    "createTime": "2026-01-01T00:00:00Z"
+  }
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|object|true|none||none|
+|»» userId|string|true|none|用户ID|none|
+|»» username|string|true|none|昵称|none|
+|»» email|string|true|none|邮箱|none|
+|»» avatar|string|true|none|头像|头像的URL地址|
+|»» createTime|string|true|none|创建时间|none|
+
+## PUT 修改个人信息
+
+PUT /api/user/profile
+
+> Body 请求参数
+
+```json
+{
+  "username": "zhangsan",
+  "email": "newemail@example.com",
+  "avatar": "https://example.com/new-avatar.jpg"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» username|body|string¦null| 是 | 昵称|不可与他人重复，若重复会返回失败|
+|» email|body|string¦null| 是 | 邮箱|none|
+|» avatar|body|string¦null| 是 | 头像|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "修改成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||1为成功，0为失败|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## PUT 密码修改
+
+PUT /api/user/password
+
+> Body 请求参数
+
+```json
+{
+  "oldPassword": "123456",
+  "newPassword": "654321"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» oldPassword|body|string| 是 | 旧密码|SHA-256加密发送|
+|» newPassword|body|string| 是 | 新密码|SHA-256加密发送|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "密码修改成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## POST 密码重置
+
+POST /api/user/password/reset
+
+> Body 请求参数
+
+```json
+{
+  "email": "zhangsan@example.com"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|body|body|object| 是 ||none|
+|» email|body|string| 是 | 邮箱|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "重置邮件已发送，请查收邮箱",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## POST 项目创建
+
+POST /api/project
+
+> Body 请求参数
+
+```json
+{
+  "title": "string",
+  "description": "string"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» title|body|string| 是 | 项目标题|none|
+|» description|body|string¦null| 是 | 项目简介|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "创建成功",
+  "data": "project-01"
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|string|true|none|项目ID|none|
+
+## PUT 修改项目
+
+PUT /api/project
+
+> Body 请求参数
+
+```json
+{
+  "projectId": "string",
+  "title": "string",
+  "description": "string"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» projectId|body|string| 是 | 项目ID|none|
+|» title|body|string¦null| 是 | 项目标题|none|
+|» description|body|string¦null| 是 | 项目描述|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "修改成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## DELETE 项目删除
+
+DELETE /api/project/{projectId}
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|projectId|path|string| 是 ||none|
+|Authorization|header|string| 否 ||none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## GET 项目列表
+
+GET /api/project/list
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|page|query|integer| 是 ||第几页|
+|pageSize|query|integer| 是 ||每页多少条|
+|title|query|string| 否 ||搜索功能，支持部分匹配|
+|Authorization|header|string| 是 ||none|
+
+#### 详细说明
+
+**title**: 搜索功能，支持部分匹配
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 0,
+  "message": "string",
+  "date": {
+    "total": 0,
+    "lists": {
+      "projectId": "string",
+      "title": "string",
+      "description": "string",
+      "style": "string"
+    }
+  }
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» date|object|true|none||none|
+|»» total|integer|true|none|返回的项目总数|none|
+|»» lists|object|true|none|项目列表|none|
+|»»» projectId|string|true|none|项目ID|none|
+|»»» title|string|true|none|项目标题|none|
+|»»» description|string¦null|true|none|项目简介|none|
+|»»» style|string¦null|true|none|项目风格|none|
+
+## GET 获取故事内容
+
+GET /api/story/list/{projectId}
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|projectId|path|string| 是 ||none|
+|Authorization|header|string| 否 ||none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 0,
+  "message": "string",
+  "data": {
+    "title": "string",
+    "content": "string",
+    "createTime": "string",
+    "updateTime": "string"
+  }
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|object|true|none||none|
+|»» title|string|true|none|故事标题|none|
+|»» content|string|true|none|故事内容|none|
+|»» createTime|string|true|none|创建时间|none|
+|»» updateTime|string|true|none|更新时间|none|
+
+## POST 创建故事章节
+
+POST /api/story
+
+> Body 请求参数
+
+```json
+{
+  "title": "string",
+  "content": "string"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» title|body|string| 是 | 章节标题|none|
+|» content|body|string| 是 | 章节内容|若用户选择文件导入，则由前端解析为string|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 0,
+  "message": "string",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## PUT 编辑故事章节
+
+PUT /api/story
+
+> Body 请求参数
+
+```json
+{
+  "projectId": "string",
+  "title": "string",
+  "content": "string"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» projectId|body|string| 是 | 项目ID|none|
+|» title|body|string¦null| 是 | 章节标题|none|
+|» content|body|string¦null| 是 | 章节内容|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "修改成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## DELETE 删除故事章节
+
+DELETE /api/story/{projectId}
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|projectId|path|string| 是 ||项目ID|
+|Authorization|header|string| 否 ||none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## GET 故事导出
+
+GET /api/story/export/{projectId}
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|projectId|path|string| 是 ||项目ID|
+|Authorization|header|string| 否 ||none|
+
+> 返回示例
+
+> 200 Response
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|返回一个文件（.txt），
+浏览器会自动下载
+
+示例响应头：
+Content-Type: text/plain
+Content-Disposition: attachment; filename="故事_勇敢的小兔子.txt"|Inline|
+
+### 返回数据结构
+
+## POST AI故事生成
+
+POST /api/story/ai
+
+> Body 请求参数
+
+```json
+{
+  "theme": "string",
+  "style": "string",
+  "keyword": "string",
+  "prompt": "string",
+  "number": "string",
+  "length": "string"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» theme|body|string| 是 | 主题|none|
+|» style|body|string¦null| 是 | 风格|none|
+|» keyword|body|string¦null| 是 | 关键词|none|
+|» prompt|body|string¦null| 是 | 要求|none|
+|» number|body|string¦null| 是 | 章节数量|如：3~6章|
+|» length|body|string¦null| 是 | 每章长度|如：medium|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "生成成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## PUT AI故事章节修改
+
+PUT /api/story/ai
+
+> Body 请求参数
+
+```json
+{
+  "projectId": "string",
+  "theme": "string",
+  "style": "string",
+  "keyword": "string",
+  "prompt": "string",
+  "length": "string",
+  "rewrite": true
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+|» projectId|body|string| 是 | 项目ID|none|
+|» theme|body|string¦null| 是 | 主题|none|
+|» style|body|string¦null| 是 | 风格|none|
+|» keyword|body|string¦null| 是 | 关键词|none|
+|» prompt|body|string| 是 | 要求|none|
+|» length|body|string¦null| 是 | 长度|如：medium|
+|» rewrite|body|boolean| 是 | 是否重写|若为true则直接重写不参考当前内容|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "修改成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## POST 语音生成
+
+POST /api/audio
+
+> Body 请求参数
+
+```json
+{
+  "projectId": "string",
+  "voiceIds": [
+    "string"
+  ],
+  "style": "string",
+  "prompt": "string",
+  "speechRate": 0
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|body|body|object| 是 ||none|
+|» projectId|body|string| 是 | 项目ID|要进行语言生成的章节ID列表|
+|» voiceIds|body|[string]| 是 | 克隆音频ID列表|想要使用的个性化音色，多个时会自动合理分配角色|
+|» style|body|string¦null| 是 | 风格|由用户输入，前端可给出几个提示项|
+|» prompt|body|string¦null| 是 | 要求|none|
+|» speechRate|body|number| 是 | 语速|0.5~2|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "生成成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|object|true|none||none|
+|»» audioId|string|true|none|音频ID|none|
+|»» title|string|true|none|语音标题|刚生成时是默认标题，如“音频1”|
+
+## GET 获取语音列表
+
+GET /api/audio
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|projectId|query|string| 是 ||项目ID|
+|page|query|integer| 否 ||第几页|
+|pageSize|query|integer| 否 ||每页多少条|
+|title|query|string| 否 ||根据语音昵称搜索，支持部分匹配|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 0,
+  "message": "string",
+  "data": {
+    "total": 0,
+    "lists": [
+      {
+        "audioId": "string",
+        "storyId": "string",
+        "title": "string"
+      }
+    ]
+  }
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|object|true|none||none|
+|»» total|integer|true|none|返回的语音总数|none|
+|»» lists|[object]|true|none|语音列表|none|
+|»»» audioId|string|true|none|语音ID|none|
+|»»» storyId|string|true|none|语音所属故事章节|none|
+|»»» title|string|true|none|语音标题|刚生成时是默认标题|
+
+## PUT 修改语音标题
+
+PUT /api/audio
+
+> Body 请求参数
+
+```json
+{
+  "audioId": "string",
+  "title": "string"
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|body|body|object| 是 ||none|
+|» audioId|body|string| 是 | 语音ID|none|
+|» title|body|string| 是 | 标题|none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "修改成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## GET 获取语音
+
+GET /api/audio/{audioId}
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|audioId|path|string| 是 ||语音ID|
+
+> 返回示例
+
+> 200 Response
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|会返回一个音频文件，可用于在线播放，也可供用户导出|Inline|
+
+### 返回数据结构
+
+## DELETE 删除语音
+
+DELETE /api/audio/{audioId}
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|audioId|path|string| 是 ||语音ID|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» message|string|true|none||none|
+|» data|null|true|none||none|
+
+## POST 背景音乐
+
+POST /api/audio/bgm
+
+> Body 请求参数
+
+```json
+{
+  "audioId": "audio_1001",
+  "bgmId": "bgm_001",
+  "volume": 0.3
+}
+```
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|body|body|object| 是 ||none|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 200,
+  "message": "背景音乐添加成功",
+  "data": {
+    "audioId": "audio_1001_bgm",
+    "audioUrl": "https://example.com/audio/with_bgm_1001.mp3",
+    "duration": 5.2
+  }
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+## GET 语音批量导出
+
+GET /api/audio/export
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|audioIds|query|array[string]| 否 ||要导出的音频ID列表|
+
+> 返回示例
+
+> 200 Response
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|返回一个压缩包（.zip），
+浏览器会自动下载|Inline|
+
+### 返回数据结构
+
+## POST 图片上传
+
+POST /common/upload
+
+### 请求参数
+
+|名称|位置|类型|必选|中文名|说明|
+|---|---|---|---|---|---|
+|Authorization|header|string| 否 ||none|
+|Content-Type|header|string| 否 ||必须为示例值|
+
+> 返回示例
+
+> 200 Response
+
+```json
+{
+  "code": 1,
+  "msg": "ea minim cillum fugiat magna",
+  "data": "https://www.baidu.com"
+}
+```
+
+### 返回结果
+
+|状态码|状态码含义|说明|数据模型|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|none|Inline|
+
+### 返回数据结构
+
+状态码 **200**
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|» code|integer|true|none||none|
+|» msg|string|true|none||none|
+|» data|string|true|none||返回阿里云OSS链接|
+
+# 数据模型
+
+<h2 id="tocS_User">User</h2>
+
+<a id="schemauser"></a>
+<a id="schema_User"></a>
+<a id="tocSuser"></a>
+<a id="tocsuser"></a>
+
+```json
+{
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "username": "string",
+  "email": "user@example.com",
+  "phone": "string",
+  "password_hash": "string",
+  "avatar_url": "string",
+  "role": "user",
+  "is_active": true,
+  "created_at": "2019-08-24T14:15:22Z",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+
+```
+
+用户表
+
+### 属性
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|id|string(uuid)|true|none||用户唯一标识|
+|username|string|true|none||用户名|
+|email|string(email)|true|none||邮箱地址|
+|phone|string|false|none||手机号码|
+|password_hash|string|true|none||密码哈希值|
+|avatar_url|string|false|none||头像URL|
+|role|string|true|none||用户角色|
+|is_active|boolean|false|none||账户是否激活|
+|created_at|string(date-time)|true|none||创建时间|
+|updated_at|string(date-time)|true|none||更新时间|
+
+#### 枚举值
+
+|属性|值|
+|---|---|
+|role|user|
+|role|admin|
+|role|superadmin|
+
+<h2 id="tocS_Story">Story</h2>
+
+<a id="schemastory"></a>
+<a id="schema_Story"></a>
+<a id="tocSstory"></a>
+<a id="tocsstory"></a>
+
+```json
+{
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "user_id": "a169451c-8525-4352-b8ca-070dd449a1a5",
+  "title": "string",
+  "content": "string",
+  "category": "string",
+  "target_age": "string",
+  "status": "draft",
+  "word_count": 0,
+  "created_at": "2019-08-24T14:15:22Z",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+
+```
+
+故事表
+
+### 属性
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|id|string(uuid)|true|none||故事唯一标识|
+|user_id|string(uuid)|true|none||创建者用户ID|
+|title|string|true|none||故事标题|
+|content|string|true|none||故事正文内容|
+|category|string|false|none||故事分类|
+|target_age|string|false|none||目标受众年龄|
+|status|string|true|none||状态|
+|word_count|integer|false|none||故事字数|
+|created_at|string(date-time)|true|none||创建时间|
+|updated_at|string(date-time)|true|none||更新时间|
+
+#### 枚举值
+
+|属性|值|
+|---|---|
+|status|draft|
+|status|published|
+|status|archived|
+
+<h2 id="tocS_Work">Work</h2>
+
+<a id="schemawork"></a>
+<a id="schema_Work"></a>
+<a id="tocSwork"></a>
+<a id="tocswork"></a>
+
+```json
+{
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "user_id": "a169451c-8525-4352-b8ca-070dd449a1a5",
+  "story_id": "179eba8d-3edf-459a-b6ee-f33630e4f5a3",
+  "title": "string",
+  "work_type": "audio",
+  "file_url": "string",
+  "thumbnail_url": "string",
+  "duration": 0,
+  "status": "pending",
+  "settings": {},
+  "created_at": "2019-08-24T14:15:22Z",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+
+```
+
+作品表
+
+### 属性
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|id|string(uuid)|true|none||作品唯一标识|
+|user_id|string(uuid)|true|none||创建者用户ID|
+|story_id|string(uuid)|false|none||关联的故事ID|
+|title|string|true|none||作品标题|
+|work_type|string|true|none||作品类型|
+|file_url|string|false|none||作品文件URL|
+|thumbnail_url|string|false|none||缩略图URL|
+|duration|integer|false|none||作品时长（秒）|
+|status|string|true|none||状态|
+|settings|object|false|none||生成参数配置|
+|created_at|string(date-time)|true|none||创建时间|
+|updated_at|string(date-time)|true|none||更新时间|
+
+#### 枚举值
+
+|属性|值|
+|---|---|
+|work_type|audio|
+|work_type|video|
+|status|pending|
+|status|processing|
+|status|completed|
+|status|failed|
+
+<h2 id="tocS_Task">Task</h2>
+
+<a id="schematask"></a>
+<a id="schema_Task"></a>
+<a id="tocStask"></a>
+<a id="tocstask"></a>
+
+```json
+{
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "user_id": "a169451c-8525-4352-b8ca-070dd449a1a5",
+  "task_type": "string",
+  "status": "pending",
+  "progress": 0,
+  "input_params": {},
+  "result": {},
+  "error_message": "string",
+  "retry_count": 0,
+  "started_at": "2019-08-24T14:15:22Z",
+  "completed_at": "2019-08-24T14:15:22Z",
+  "created_at": "2019-08-24T14:15:22Z"
+}
+
+```
+
+任务表
+
+### 属性
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|id|string(uuid)|true|none||任务唯一标识|
+|user_id|string(uuid)|true|none||创建者用户ID|
+|task_type|string|true|none||任务类型|
+|status|string|true|none||状态|
+|progress|integer|true|none||任务进度百分比|
+|input_params|object|false|none||输入参数|
+|result|object|false|none||执行结果|
+|error_message|string|false|none||错误信息|
+|retry_count|integer|true|none||重试次数|
+|started_at|string(date-time)|false|none||开始时间|
+|completed_at|string(date-time)|false|none||完成时间|
+|created_at|string(date-time)|true|none||创建时间|
+
+#### 枚举值
+
+|属性|值|
+|---|---|
+|status|pending|
+|status|in_progress|
+|status|success|
+|status|failed|
+|status|cancelled|
+
+<h2 id="tocS_VoiceModel">VoiceModel</h2>
+
+<a id="schemavoicemodel"></a>
+<a id="schema_VoiceModel"></a>
+<a id="tocSvoicemodel"></a>
+<a id="tocsvoicemodel"></a>
+
+```json
+{
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "user_id": "a169451c-8525-4352-b8ca-070dd449a1a5",
+  "name": "string",
+  "model_url": "string",
+  "sample_url": "string",
+  "sample_duration": 0,
+  "status": "training",
+  "similarity": 0.8,
+  "created_at": "2019-08-24T14:15:22Z",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+
+```
+
+声音模型表
+
+### 属性
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|id|string(uuid)|true|none||模型唯一标识|
+|user_id|string(uuid)|true|none||所有者用户ID|
+|name|string|true|none||模型名称|
+|model_url|string|false|none||模型文件URL|
+|sample_url|string|false|none||样本音频URL|
+|sample_duration|integer|false|none||样本音频时长（秒）|
+|status|string|true|none||状态|
+|similarity|number(float)|true|none||声音相似度|
+|created_at|string(date-time)|true|none||创建时间|
+|updated_at|string(date-time)|true|none||更新时间|
+
+#### 枚举值
+
+|属性|值|
+|---|---|
+|status|training|
+|status|ready|
+|status|failed|
+

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router";
 import { BookOpen, Plus, User, Save, X, LogOut, Trash2, KeyRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
+import { AppHeader } from "./AppHeader";
 
 interface Story {
   id: string;
@@ -47,6 +48,7 @@ export function HomeModalDismiss() {
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [pendingDeleteStoryId, setPendingDeleteStoryId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -57,7 +59,7 @@ export function HomeModalDismiss() {
       setEditingUser(parsedUser);
     }
     if (token) {
-      api.user.getInfo(token).then((response) => {
+      api.user.getProfile(token).then((response) => {
         if (response.success) {
           const nextUser = normalizeUser(response.user);
           setUser(nextUser);
@@ -105,19 +107,26 @@ export function HomeModalDismiss() {
     setLoading(true);
     setError("");
     const nextUser = normalizeUser(editingUser);
+    const saveToLocal = () => {
+      const localUser = normalizeUser({ ...(user || {}), ...nextUser });
+      setUser(localUser);
+      setEditingUser(localUser);
+      localStorage.setItem("user", JSON.stringify(localUser));
+      setShowUserModal(false);
+    };
     try {
-      const response = await api.user.updateInfo({ email: nextUser.email, avatar: nextUser.avatar }, token);
+      const response = await api.user.updateProfile({ username: nextUser.username, email: nextUser.email, avatar: nextUser.avatar, bio: nextUser.bio }, token);
       if (response.success) {
-        const mergedUser = normalizeUser({ ...nextUser, ...response.user, bio: nextUser.bio });
+        const mergedUser = normalizeUser({ ...response.user, ...nextUser, bio: nextUser.bio });
         setUser(mergedUser);
         setEditingUser(mergedUser);
         localStorage.setItem("user", JSON.stringify(mergedUser));
-        closeModal();
+        setShowUserModal(false);
       } else {
-        setError(response.message || "信息保存失败");
+        saveToLocal();
       }
     } catch {
-      setError("网络错误，请稍后重试");
+      saveToLocal();
     } finally {
       setLoading(false);
     }
@@ -134,11 +143,28 @@ export function HomeModalDismiss() {
       setPasswordError("两次输入的新密码不一致");
       return;
     }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setPasswordError("请先登录");
+      return;
+    }
     setPasswordSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setPasswordMessage("密码修改表单已准备完成，当前为前端演示状态");
-      setPasswordForm(defaultPasswordForm);
+      const response = await api.user.updatePassword(
+        {
+          oldPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        },
+        token,
+      );
+      if (response.success) {
+        setPasswordMessage("修改成功");
+        setPasswordForm(defaultPasswordForm);
+      } else {
+        setPasswordError(response.message || "修改失败");
+      }
+    } catch {
+      setPasswordError("网络错误，请稍后重试");
     } finally {
       setPasswordSaving(false);
     }
@@ -152,29 +178,25 @@ export function HomeModalDismiss() {
     reader.readAsDataURL(file);
   };
 
+  const confirmDeleteStory = (storyId: string) => {
+    setPendingDeleteStoryId(storyId);
+  };
+
+  const handleDeleteStory = () => {
+    if (!pendingDeleteStoryId) return;
+    const storedStories = localStorage.getItem("stories");
+    if (storedStories) {
+      const localStories = JSON.parse(storedStories);
+      const updatedStories = localStories.filter((s: Story) => s.id !== pendingDeleteStoryId);
+      localStorage.setItem("stories", JSON.stringify(updatedStories));
+      setStories(updatedStories);
+    }
+    setPendingDeleteStoryId(null);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-white">
-      <header className="border-b border-[#6b75c9]/20 bg-[#111209]/88 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]"><BookOpen className="h-5 w-5 text-white" /></div>
-              <span className="text-lg font-semibold text-[#e4ddff]">梦境编织者</span>
-            </div>
-            <nav className="flex items-center gap-2 rounded-full border border-[#6b75c9]/25 bg-[#231c40]/70 px-2 py-2 shadow-lg shadow-black/10">
-              <Link to="/" className="rounded-full px-4 py-2 text-sm font-medium text-[#efeaff] transition-colors hover:bg-[#63549f]/45 hover:text-white">书藏馆</Link>
-              <Link to="/create" className="rounded-full px-4 py-2 text-sm font-medium text-[#d9d0ff] transition-colors hover:bg-[#63549f]/45 hover:text-white">创作工坊</Link>
-              <Link to="/" className="rounded-full px-4 py-2 text-sm font-medium text-[#d9d0ff] transition-colors hover:bg-[#63549f]/45 hover:text-white">声音实验室</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-[#a7a8b7]">{displayUser.username}</span>
-            <button onClick={() => setShowUserModal(true)} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#63549f]/40 transition-colors hover:bg-[#63549f]/65">
-              {displayUser.avatar ? <img src={displayUser.avatar} alt={displayUser.username} className="h-10 w-10 rounded-full object-cover" /> : <User className="h-5 w-5 text-white" />}
-            </button>
-          </div>
-        </div>
-      </header>
+      <AppHeader activeTab="home" />
 
       {showUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8" onClick={closeModal}>
@@ -189,7 +211,13 @@ export function HomeModalDismiss() {
             {error && <div className="mb-4 rounded-lg bg-[#6b75c9]/15 p-3 text-sm text-[#d8ddff]">{error}</div>}
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4">
-                <input type="text" value={editingUser.username} className="w-full rounded-lg border border-[#63549f]/40 bg-[#231c40]/75 px-4 py-2 text-white" disabled />
+                <input
+                  type="text"
+                  value={editingUser.username}
+                  onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value, nickname: e.target.value })}
+                  className="w-full rounded-lg border border-[#63549f]/40 bg-[#231c40]/75 px-4 py-2 text-white"
+                  placeholder="请输入昵称"
+                />
                 <input type="email" value={editingUser.email} onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })} className="w-full rounded-lg border border-[#63549f]/40 bg-[#231c40]/75 px-4 py-2 text-white" placeholder="请输入邮箱" />
                 <textarea value={editingUser.bio} onChange={(e) => setEditingUser({ ...editingUser, bio: e.target.value })} className="w-full rounded-lg border border-[#63549f]/40 bg-[#231c40]/75 px-4 py-2 text-white" placeholder="写下一句介绍自己吧" rows={4} />
                 <div className="flex gap-3 pt-2">
@@ -214,37 +242,45 @@ export function HomeModalDismiss() {
         </div>
       )}
 
-      <section className="relative mx-auto max-w-7xl overflow-hidden px-6 py-16">
-        <div className="absolute inset-0 z-0"><div className="absolute inset-0 z-10 bg-gradient-to-r from-[#111209]/88 via-[#231c40]/72 to-[#111209]/88"></div><img src="/src/assets/images/bg.jpg" alt="小屋背景" className="h-full w-full object-cover" /></div>
+      {pendingDeleteStoryId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4" onClick={() => setPendingDeleteStoryId(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-[#8a78b7]/30 bg-[#111209] p-5 shadow-2xl shadow-black/40" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-2 text-lg font-semibold text-[#ede8ff]">删除故事</h3>
+            <p className="mb-5 text-sm text-[#b8afdf]">确定要删除这个故事吗？此操作不可撤销。</p>
+            <div className="flex gap-3">
+              <button onClick={() => setPendingDeleteStoryId(null)} className="flex-1 rounded-lg border border-[#63549f]/45 bg-[#231c40]/70 px-4 py-2 text-sm text-[#ede8ff] transition-colors hover:bg-[#2f2750]">
+                取消
+              </button>
+              <button onClick={handleDeleteStory} className="flex-1 rounded-lg bg-red-500/85 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500">
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <section className="relative mx-auto max-w-7xl overflow-hidden px-6 py-12">
+        <div className="absolute inset-0 z-0"><div className="absolute inset-0 z-10 bg-gradient-to-r from-[#111209]/88 via-[#231c40]/72 to-[#111209]/88"></div><img src="/src/assets/images/bg.jpg" alt="小屋背景" className="h-full w-full scale-[1.05] object-cover" /></div>
         <div className="relative z-10 flex flex-col items-center justify-between md:flex-row">
           <div className="mb-8 md:mb-0 md:w-1/2">
-            <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">NEW FEATURE</span>
+            {/* <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">NEW FEATURE</span> */}
+            <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">梦境编织者</span>
             <h1 className="mb-4 text-4xl font-bold md:text-5xl">AI 合成<br /><span className="text-[#d8ddff]">由爸爸妈妈讲故事</span></h1>
             <Link to="/create" className="inline-flex items-center gap-2 rounded-lg bg-[#63549f] px-6 py-3 transition-colors hover:bg-[#6b75c9]"><Plus className="h-5 w-5" />立即生成新故事</Link>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-16">
-        <div className="mb-8 flex items-center justify-between"><h2 className="text-2xl font-semibold text-[#ede8ff]">全部故事</h2></div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <section className="mx-auto max-w-7xl px-6 py-2">
+        <div className="mb-3 flex items-center justify-between"><h2 className="text-xl font-semibold text-[#ede8ff]">全部故事</h2></div>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {stories.map((story) => (
             <div key={story.id} className="relative">
-              <Link to={`/story/${story.id}`} className="block overflow-hidden rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 transition-colors hover:bg-[#231c40]/70">
-                <div className="h-48">{story.cover ? <img src={story.cover} alt={story.title} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-[#231c40]/75"><BookOpen className="h-12 w-12 text-[#a7a8b7]" /></div>}</div>
-                <div className="p-6"><h3 className="mb-2 font-semibold text-[#ede8ff]">{story.title}</h3><p className="mb-4 line-clamp-2 text-sm text-[#a7a8b7]">{story.summary}</p></div>
+              <Link to={`/story/${story.id}`} className="block h-[250px] overflow-hidden rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 transition-colors hover:bg-[#231c40]/70">
+                <div className="h-[176px]">{story.cover ? <img src={story.cover} alt={story.title} className="h-full w-full object-cover object-center" /> : <div className="flex h-full w-full items-center justify-center bg-[#231c40]/75"><BookOpen className="h-10 w-10 text-[#a7a8b7]" /></div>}</div>
+                <div className="h-[74px] p-3"><h3 className="mb-1 line-clamp-1 text-sm font-semibold text-[#ede8ff]">{story.title}</h3><p className="mb-1 line-clamp-1 text-xs text-[#a7a8b7]">{story.summary}</p></div>
               </Link>
-              <button onClick={() => {
-                if (window.confirm("确定要删除这个故事吗？")) {
-                  const storedStories = localStorage.getItem("stories");
-                  if (storedStories) {
-                    const localStories = JSON.parse(storedStories);
-                    const updatedStories = localStories.filter((s: Story) => s.id !== story.id);
-                    localStorage.setItem("stories", JSON.stringify(updatedStories));
-                    window.location.reload();
-                  }
-                }
-              }} className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-red-500/25 transition-colors hover:bg-red-500/40" title="删除故事"><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => confirmDeleteStory(story.id)} className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-red-500/25 transition-colors hover:bg-red-500/40" title="删除故事"><Trash2 className="h-4 w-4" /></button>
             </div>
           ))}
         </div>

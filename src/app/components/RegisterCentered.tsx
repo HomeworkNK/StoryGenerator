@@ -27,17 +27,7 @@ export function RegisterCentered() {
     try {
       const response = await api.user.register({ username: username.trim(), password, email: email.trim() });
       if (response.success) {
-        localStorage.setItem("token", response.token);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            ...response.user,
-            avatar: response.user?.avatar || avatar,
-            username: response.user?.username || username.trim(),
-            nickname: response.user?.nickname || username.trim(),
-          }),
-        );
-        navigate("/");
+        navigate("/login");
       } else {
         setError(response.message || "注册失败");
       }
@@ -52,14 +42,13 @@ export function RegisterCentered() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#111209_0%,#231c40_52%,#111209_100%)] px-6 py-10 text-white">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl items-center justify-center">
-        <div className="w-full max-w-md rounded-[28px] border border-[#8a78b7]/25 bg-[#111209]/82 p-8 shadow-2xl shadow-black/30 backdrop-blur-md">
-          <div className="mb-8 text-center">
-            <Link to="/" className="mb-6 inline-flex items-center gap-2">
-              <BookOpen className="h-8 w-8 text-[#d8ddff]" />
-              <span className="text-xl font-semibold text-[#ede8ff]">故事创作平台</span>
+        <div className="w-full max-w-xs rounded-[20px] border border-[#8a78b7]/25 bg-[#111209]/82 p-5 shadow-2xl shadow-black/30 backdrop-blur-md">
+          <div className="mb-5 text-center">
+            <Link to="/" className="mb-5 inline-flex items-center gap-2">
+              <BookOpen className="h-7 w-7 text-[#d8ddff]" />
+              <span className="text-lg font-semibold text-[#ede8ff]">故事创作平台</span>
             </Link>
-            <h2 className="text-3xl font-semibold text-white">注册</h2>
-            <p className="mt-2 text-sm text-[#b8afdf]">创建账号后即可进入首页与个人资料编辑页</p>
+            <h2 className="text-xl font-semibold text-white">注册</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -81,8 +70,7 @@ export function RegisterCentered() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-[#d8ddff]">头像</label>
-              <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[#8a78b7]/45 bg-[#231c40]/55 px-4 py-3 transition-colors hover:border-[#6b75c9]">
+              <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[#8a78b7]/45 bg-[#231c40]/55 px-4 py-2 transition-colors hover:border-[#6b75c9]">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#63549f]/35">
                     {avatar ? <img src={avatar} alt="头像预览" className="h-11 w-11 rounded-full object-cover" /> : <User className="h-5 w-5 text-[#d8ddff]" />}

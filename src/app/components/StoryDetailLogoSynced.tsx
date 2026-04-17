@@ -3,6 +3,7 @@ import { BookOpen, ArrowLeft, Video, Mic, Edit, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { api } from "../../services/api";
+import { AppHeader } from "./AppHeader";
 
 interface Story {
   id: string;
@@ -11,6 +12,9 @@ interface Story {
   content: string;
   createdAt: string;
   hasVoice: boolean;
+  aiGenerated?: boolean;
+  hasImage?: boolean;
+  hasVideo?: boolean;
   voiceType?: string;
   cover?: string;
   segments?: Array<{ index: number; text: string; emotion: string }>;
@@ -31,6 +35,9 @@ export function StoryDetailLogoSynced() {
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
+
 
   useEffect(() => {
     if (id) fetchStoryDetail(id);
@@ -56,7 +63,17 @@ export function StoryDetailLogoSynced() {
     try {
       const response = await api.story.get(storyId, token);
       if (response.success && response.data) {
-        applyStory(response.data);
+        const mergedStory = {
+          ...(localStory || {}),
+          ...response.data,
+          id: storyId,
+          hasVoice: response.data.hasVoice ?? localStory?.hasVoice ?? false,
+          hasImage: response.data.hasImage ?? localStory?.hasImage ?? false,
+          hasVideo: response.data.hasVideo ?? localStory?.hasVideo ?? false,
+          voiceType: response.data.voiceType ?? localStory?.voiceType,
+          cover: response.data.cover ?? localStory?.cover,
+        };
+        applyStory(mergedStory as Story);
       } else if (!localStory) {
         setError(response.message || "故事不存在");
       }
@@ -96,42 +113,81 @@ export function StoryDetailLogoSynced() {
     }
   };
 
+  const updateLocalStory = (updater: (current: Story) => Story) => {
+    if (!story) return;
+    const nextStory = updater(story);
+    setStory(nextStory);
+    const storedStories = localStorage.getItem("stories");
+    if (!storedStories) return;
+    const stories = JSON.parse(storedStories);
+    const updatedStories = stories.map((s: Story) => (s.id === nextStory.id ? { ...s, ...nextStory } : s));
+    localStorage.setItem("stories", JSON.stringify(updatedStories));
+  };
+
+  const handleGenerateImage = async () => {
+    if (!story || !story.hasVoice) return;
+    setImageLoading(true);
+    setError("");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      updateLocalStory((current) => ({
+        ...current,
+        hasImage: true,
+        cover: current.cover || "/src/assets/images/bg.jpg",
+      }));
+    } catch {
+      setError("生成图片失败，请稍后重试");
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleGenerateVideo = async () => {
+    if (!story || !story.hasImage) return;
+    setVideoLoading(true);
+    setError("");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      updateLocalStory((current) => ({
+        ...current,
+        hasVideo: true,
+      }));
+    } catch {
+      setError("生成视频失败，请稍后重试");
+    } finally {
+      setVideoLoading(false);
+    }
+  };
+
   if (loading && !story) return <div className="flex min-h-screen items-center justify-center bg-[#111209] text-[#ddd6ff]">正在加载故事...</div>;
   if (!story) return <div className="flex min-h-screen items-center justify-center bg-[#111209] text-[#ddd6ff]">{error || "故事不存在"}</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-white">
-      <header className="border-b border-[#6b75c9]/20 bg-[#111209]/88 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]">
-              <BookOpen className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-[#e4ddff]">梦境编织者</span>
-          </Link>
-        </div>
-      </header>
+      <AppHeader activeTab="create" />
 
-      <main className="mx-auto max-w-7xl px-6 py-12">
-        <Link to="/" className="mb-8 inline-flex items-center gap-2 text-[#d8ddff] transition-colors hover:text-white">
-          <ArrowLeft className="h-4 w-4" />
-          返回首页
-        </Link>
+      <main className="mx-auto max-w-7xl px-6 py-0">
         {error && <div className="mb-6 rounded-lg bg-red-500/20 p-3 text-red-200">{error}</div>}
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="md:col-span-1">
             <div className="space-y-6">
-              <h3 className="mb-4 text-lg font-semibold text-[#f4f0ff]">工作流</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <Link to="/" className="inline-flex items-center gap-2 text-[#d8ddff] transition-colors hover:text-white">
+                  <ArrowLeft className="h-4 w-4" />
+                  返回首页
+                </Link>
+                <h3 className="text-lg font-semibold text-[#f4f0ff]">工作流</h3>
+              </div>
               <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#63549f]"><span className="text-sm font-medium">1</span></div>
-                    <h4 className="font-medium text-[#f4f0ff]">AI 生成故事</h4>
+                    <h4 className="font-medium text-[#f4f0ff]">{story.aiGenerated ? "AI 生成故事" : "我的故事"}</h4>
                   </div>
                   <div className="h-3 w-3 rounded-full bg-green-500"></div>
                 </div>
-                <button onClick={() => setEditing(!editing)} className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63]"><Edit className="h-4 w-4" />编辑生成结果</button>
+                <button onClick={() => setEditing(!editing)} className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63]"><Edit className="h-4 w-4" />{story.aiGenerated ? "编辑生成结果" : "编辑故事内容"}</button>
               </div>
               <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 p-4">
                 <div className="mb-3 flex items-center justify-between">
@@ -139,7 +195,7 @@ export function StoryDetailLogoSynced() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#63549f]"><span className="text-sm font-medium">2</span></div>
                     <h4 className="font-medium text-[#f4f0ff]">AI 配音</h4>
                   </div>
-                  <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                  <div className={`h-3 w-3 rounded-full ${story.hasVoice ? "bg-green-500" : "bg-yellow-500"}`}></div>
                 </div>
                 <Link to={`/voice/${story.id}`} className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63]"><Mic className="h-4 w-4" />选择音色</Link>
               </div>
@@ -149,9 +205,33 @@ export function StoryDetailLogoSynced() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]"><span className="text-sm font-medium">3</span></div>
                     <h4 className="font-medium text-[#f4f0ff]">AI 生图</h4>
                   </div>
-                  <div className="h-3 w-3 rounded-full bg-gray-500"></div>
+                  <div className={`h-3 w-3 rounded-full ${story.hasImage ? "bg-green-500" : "bg-gray-500"}`}></div>
                 </div>
-                <button className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#bdb5e7]" disabled><Video className="h-4 w-4" />生成图片</button>
+                <button
+                  onClick={handleGenerateImage}
+                  className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63] disabled:text-[#bdb5e7] disabled:hover:bg-[#312752]"
+                  disabled={!story.hasVoice || imageLoading}
+                >
+                  <Video className="h-4 w-4" />
+                  {imageLoading ? "生成中..." : "生成图片"}
+                </button>
+              </div>
+              <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]"><span className="text-sm font-medium">4</span></div>
+                    <h4 className="font-medium text-[#f4f0ff]">AI 生成视频</h4>
+                  </div>
+                  <div className={`h-3 w-3 rounded-full ${story.hasVideo ? "bg-green-500" : "bg-gray-500"}`}></div>
+                </div>
+                <button
+                  onClick={handleGenerateVideo}
+                  className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63] disabled:text-[#bdb5e7] disabled:hover:bg-[#312752]"
+                  disabled={!story.hasImage || videoLoading}
+                >
+                  <Video className="h-4 w-4" />
+                  {videoLoading ? "生成中..." : "生成视频"}
+                </button>
               </div>
             </div>
           </div>
@@ -174,7 +254,7 @@ export function StoryDetailLogoSynced() {
                 <div className="mb-4 flex items-center gap-3">
                   <h1 className="text-3xl font-bold text-[#faf8ff]">{story.title}</h1>
                   <button onClick={() => setEditing(!editing)} className="rounded-lg bg-[#312752] p-2 transition-colors hover:bg-[#3a2d63]" title="修改故事名称"><Edit className="h-5 w-5" /></button>
-                  <span className="rounded-full bg-[#63549f]/25 px-3 py-1 text-xs font-medium text-[#ddd6ff]">AI 生成</span>
+                  <span className="rounded-full bg-[#63549f]/25 px-3 py-1 text-xs font-medium text-[#ddd6ff]">{story.aiGenerated ? "AI 生成" : "手动创建"}</span>
                 </div>
                 <div className="mb-6 flex items-center gap-2"><span className="text-sm text-[#c6bdf3]">阅读时长：2分钟</span></div>
                 <div className="mb-6 overflow-hidden rounded-xl border border-[#63549f]/30 bg-[#231c40]/45">

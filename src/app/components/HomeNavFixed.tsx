@@ -76,7 +76,7 @@ export function HomeNavFixed() {
     if (token) {
       const fetchUserInfo = async () => {
         try {
-          const response = await api.user.getInfo(token);
+          const response = await api.user.getProfile(token);
           if (response.success) {
             const nextUser = normalizeUser(response.user);
             setUser(nextUser);
@@ -138,8 +138,9 @@ export function HomeNavFixed() {
     const nextUser = normalizeUser(editingUser);
 
     try {
-      const response = await api.user.updateInfo(
+      const response = await api.user.updateProfile(
         {
+          username: nextUser.username,
           email: nextUser.email,
           avatar: nextUser.avatar,
         },
@@ -227,7 +228,7 @@ export function HomeNavFixed() {
             <nav className="flex items-center gap-2 rounded-full border border-[#6b75c9]/25 bg-[#231c40]/70 px-2 py-2 shadow-lg shadow-black/10">
               <Link to="/" className="rounded-full px-4 py-2 text-sm font-medium text-[#efeaff] transition-colors hover:bg-[#63549f]/45 hover:text-white">书藏馆</Link>
               <Link to="/create" className="rounded-full px-4 py-2 text-sm font-medium text-[#d9d0ff] transition-colors hover:bg-[#63549f]/45 hover:text-white">创作工坊</Link>
-              <Link to="/" className="rounded-full px-4 py-2 text-sm font-medium text-[#d9d0ff] transition-colors hover:bg-[#63549f]/45 hover:text-white">声音实验室</Link>
+              <Link to="/voice-lab" className="rounded-full px-4 py-2 text-sm font-medium text-[#d9d0ff] transition-colors hover:bg-[#63549f]/45 hover:text-white">声音实验室</Link>
             </nav>
           </div>
 
@@ -332,7 +333,8 @@ export function HomeNavFixed() {
         </div>
         <div className="relative z-10 flex flex-col items-center justify-between md:flex-row">
           <div className="mb-8 md:mb-0 md:w-1/2">
-            <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">NEW FEATURE</span>
+            {/* <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">NEW FEATURE</span> */}
+            <span className="mb-4 inline-block rounded-full bg-[#8a78b7]/20 px-3 py-1 text-sm font-medium text-[#d8ddff]">梦境编织者</span>
             <h1 className="mb-4 text-4xl font-bold md:text-5xl">
               AI 合成
               <br />
