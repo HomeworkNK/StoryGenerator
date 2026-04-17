@@ -1,6 +1,5 @@
-const API_BASE_URL = 'http://127.0.0.1:4523/m1/8127899-7885352-default/api';
+const API_BASE_URL = "http://127.0.0.1:4523/m1/8127899-7885352-default/api";
 
-// 模拟数据模式 - 启用后使用本地模拟数据
 const USE_MOCK_DATA = false;
 
 interface ApiResponse<T = any> {
@@ -9,883 +8,746 @@ interface ApiResponse<T = any> {
   data: T;
 }
 
-function handleResponse<T>(response: Promise<ApiResponse<T>>): Promise<{ success: boolean; token?: string; user?: T; message?: string; data?: T }> {
-  return response.then((res) => {
-    // 检查响应是否存在
-    if (res) {
-      // 检查是否有成功消息
-      if (res.message) {
-        return { success: true, ...res };
-      } else {
-        return { success: false, message: res.message || '操作失败' };
-      }
-    } else {
-      return { success: false, message: '操作失败' };
-    }
-  }).catch((err) => {
-    console.error('API Error:', err);
-    return { success: false, message: '网络异常，请稍后重试' };
-  });
+type ApiResult<T = any> = {
+  success: boolean;
+  message?: string;
+  data?: T;
+  token?: string;
+  user?: any;
+};
+
+type MockUser = {
+  userId: string;
+  username: string;
+  password: string;
+  email: string;
+  avatar?: string;
+  bio?: string;
+  createTime: string;
+};
+
+type MockVoice = {
+  voiceId: string;
+  voiceName: string;
+  default: boolean;
+  username: string;
+};
+
+type MockStory = {
+  id: string;
+  title: string;
+  summary: string;
+  content?: string;
+  segments?: Array<{ index: number; text: string; emotion: string }>;
+  createdAt: string;
+  hasVoice: boolean;
+};
+
+const STORAGE_KEYS = {
+  users: "mockUsers",
+  voices: "mockAudioSamples",
+  stories: "stories",
+  tokenUserMap: "mockTokenUserMap",
+};
+
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function getMockUsers(): MockUser[] {
+  return safeParse<MockUser[]>(localStorage.getItem(STORAGE_KEYS.users), []);
+}
+
+function saveMockUsers(users: MockUser[]) {
+  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+}
+
+function getMockVoices(): MockVoice[] {
+  return safeParse<MockVoice[]>(localStorage.getItem(STORAGE_KEYS.voices), []);
+}
+
+function saveMockVoices(voices: MockVoice[]) {
+  localStorage.setItem(STORAGE_KEYS.voices, JSON.stringify(voices));
+}
+
+function getMockStories(): MockStory[] {
+  return safeParse<MockStory[]>(localStorage.getItem(STORAGE_KEYS.stories), []);
+}
+
+function saveMockStories(stories: MockStory[]) {
+  localStorage.setItem(STORAGE_KEYS.stories, JSON.stringify(stories));
+}
+
+function getTokenUserMap(): Record<string, string> {
+  return safeParse<Record<string, string>>(localStorage.getItem(STORAGE_KEYS.tokenUserMap), {});
+}
+
+function saveTokenUserMap(map: Record<string, string>) {
+  localStorage.setItem(STORAGE_KEYS.tokenUserMap, JSON.stringify(map));
+}
+
+function generateId(prefix: string): string {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function generateToken(username: string): string {
+  return `mock_token_${username}_${Date.now()}`;
 }
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// 模拟用户数据存储
-let mockUsers: Map<string, { username: string; password: string; email: string; userId: string; avatar?: string; createTime: string }> = new Map();
+function extractUsernameFromToken(token: string): string | null {
+  const map = getTokenUserMap();
+  if (map[token]) return map[token];
 
-// 模拟音频样本存储
-let mockAudioSamples: Map<string, { voiceId: string; voiceName: string; default: boolean; username: string }> = new Map();
+  const match = token.match(/mock_token_(.+?)_/);
+  return match ? match[1] : null;
+}
 
-// 从本地存储加载模拟用户数据
-function loadMockUsers() {
-  const storedUsers = localStorage.getItem('mockUsers');
-  if (storedUsers) {
-    const users = JSON.parse(storedUsers);
-    users.forEach((user: any) => {
-      mockUsers.set(user.username, user);
-    });
+async function requestJson<T>(path: string, init?: RequestInit): Promise<ApiResponse<T> | null> {
+  if (USE_MOCK_DATA) return null;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, init);
+    if (!response.ok) return null;
+    return (await response.json()) as ApiResponse<T>;
+  } catch (error) {
+    console.error("API Error:", error);
+    return null;
   }
 }
 
-// 从本地存储加载模拟音频样本
-function loadMockAudioSamples() {
-  const storedSamples = localStorage.getItem('mockAudioSamples');
-  if (storedSamples) {
-    const samples = JSON.parse(storedSamples);
-    samples.forEach((sample: any) => {
-      mockAudioSamples.set(sample.voiceId, sample);
-    });
-  }
+function ok<T>(data?: T, message = "操作成功"): ApiResult<T> {
+  return { success: true, data, message };
 }
 
-// 保存模拟用户数据到本地存储
-function saveMockUsers() {
-  const users = Array.from(mockUsers.values());
-  localStorage.setItem('mockUsers', JSON.stringify(users));
+function fail(message = "操作失败"): ApiResult {
+  return { success: false, message };
 }
 
-// 保存模拟音频样本到本地存储
-function saveMockAudioSamples() {
-  const samples = Array.from(mockAudioSamples.values());
-  localStorage.setItem('mockAudioSamples', JSON.stringify(samples));
+function getCurrentUser(token: string): MockUser | null {
+  const username = extractUsernameFromToken(token);
+  if (!username) return null;
+  const users = getMockUsers();
+  return users.find((u) => u.username === username) || null;
 }
 
-// 初始化加载模拟数据
-loadMockUsers();
-loadMockAudioSamples();
-
-// 生成随机用户ID
-function generateUserId(): string {
-  return 'user_' + Math.random().toString(36).substr(2, 9);
-}
-
-// 生成模拟JWT令牌
-function generateToken(username: string): string {
-  return 'mock_token_' + username + '_' + Date.now();
+function persistCurrentUserProfile(user: Partial<MockUser>) {
+  const existing = safeParse<any>(localStorage.getItem("user"), {});
+  localStorage.setItem("user", JSON.stringify({ ...existing, ...user }));
 }
 
 export const api = {
   user: {
     register: (data: { username: string; password: string; email: string }) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          // 检查用户名是否已存在
-          for (const user of mockUsers.values()) {
-            if (user.username === data.username) {
-              return { success: false, message: '用户名已存在' };
-            }
-            if (user.email === data.email) {
-              return { success: false, message: '邮箱已被注册' };
-            }
-          }
-          
-          // 注册新用户
-          const hashedPassword = await hashPassword(data.password);
-          const userId = generateUserId();
-          mockUsers.set(data.username, {
-            username: data.username,
-            password: hashedPassword,
-            email: data.email,
-            userId: userId,
-            createTime: new Date().toISOString()
-          });
-          // 保存到本地存储
-          saveMockUsers();
-          
-          console.log('✅ Mock注册成功:', data.username);
-          return { success: true, message: '注册成功' };
-        } else {
-          try {
-            const hashedPassword = await hashPassword(data.password);
-            const response = await fetch(`${API_BASE_URL}/user/register`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...data, password: hashedPassword }),
-            });
-            const res = await response.json();
-            if (res && res.message) {
-              return { success: true, message: '注册成功' };
-            } else {
-              return { success: false, message: '注册失败' };
-            }
-          } catch (err) {
-            console.error('Register error:', err);
-            return { success: false, message: '网络异常，请稍后重试' };
-          }
+      (async (): Promise<ApiResult> => {
+        const payload = {
+          username: data.username.trim(),
+          email: data.email.trim(),
+          password: await hashPassword(data.password),
+        };
+
+        const backendRes = await requestJson<null>("/user/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (backendRes?.code === 200) {
+          return ok(undefined, backendRes.message || "注册成功");
         }
+
+        const users = getMockUsers();
+        const userExists = users.some((u) => u.username === payload.username);
+        if (userExists) return fail("用户名已存在");
+
+        const emailExists = users.some((u) => u.email === payload.email);
+        if (emailExists) return fail("邮箱已被注册");
+
+        users.push({
+          userId: generateId("user"),
+          username: payload.username,
+          password: payload.password,
+          email: payload.email,
+          createTime: new Date().toISOString(),
+        });
+        saveMockUsers(users);
+
+        return ok(undefined, "注册成功");
       })(),
 
     login: (data: { username: string; password: string }) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          const user = mockUsers.get(data.username);
-          if (!user) {
-            return { success: false, message: '用户名或密码错误' };
-          }
-          
-          const hashedPassword = await hashPassword(data.password);
-          if (user.password === hashedPassword) {
-            const token = generateToken(data.username);
-            console.log('✅ Mock登录成功:', data.username);
-            return { success: true, token: token, message: '登录成功' };
-          } else {
-            return { success: false, message: '用户名或密码错误' };
-          }
-        } else {
-          try {
-            const hashedPassword = await hashPassword(data.password);
-            const response = await fetch(`${API_BASE_URL}/user/login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...data, password: hashedPassword }),
-            });
-            const res = await response.json();
-            if (res && res.data) {
-              return { success: true, token: res.data, message: '登录成功' };
-            } else {
-              return { success: false, message: '用户名或密码错误' };
-            }
-          } catch (err) {
-            console.error('Login error:', err);
-            return { success: false, message: '网络异常，请稍后重试' };
-          }
+      (async (): Promise<ApiResult> => {
+        const payload = {
+          username: data.username.trim(),
+          password: await hashPassword(data.password),
+        };
+
+        const backendRes = await requestJson<string>("/user/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (backendRes?.code === 200 && backendRes.data) {
+          return { success: true, token: backendRes.data, message: backendRes.message || "登录成功" };
         }
+
+        const users = getMockUsers();
+        const user = users.find((u) => u.username === payload.username && u.password === payload.password);
+        if (!user) return fail("用户名或密码错误");
+
+        const token = generateToken(user.username);
+        const map = getTokenUserMap();
+        map[token] = user.username;
+        saveTokenUserMap(map);
+
+        persistCurrentUserProfile({
+          userId: user.userId,
+          username: user.username,
+          email: user.email,
+          avatar: user.avatar,
+          createTime: user.createTime,
+        });
+
+        return { success: true, token, message: "登录成功" };
       })(),
 
     logout: (token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock登出成功');
-          return { success: true, message: '登出成功' };
-        } else {
-          return handleResponse(
-            fetch(`${API_BASE_URL}/user/logout`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${token}` },
-            }).then((res) => res.json()) as Promise<ApiResponse<null>>
-          );
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<null>("/user/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const map = getTokenUserMap();
+        if (map[token]) {
+          delete map[token];
+          saveTokenUserMap(map);
         }
+
+        if (backendRes?.code === 200) return ok(undefined, backendRes.message || "登出成功");
+        return ok(undefined, "登出成功");
       })(),
 
     getProfile: (token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          // 从token中提取用户名
-          const usernameMatch = token.match(/mock_token_(.+?)_/);
-          if (usernameMatch) {
-            const username = usernameMatch[1];
-            const user = mockUsers.get(username);
-            if (user) {
-              console.log('✅ Mock获取用户信息:', user.username);
-              return { 
-                success: true, 
-                user: {
-                  userId: user.userId,
-                  username: user.username,
-                  email: user.email,
-                  avatar: user.avatar,
-                  createTime: user.createTime
-                }, 
-                message: '获取成功' 
-              };
-            }
-          }
-          return { success: false, message: '用户未登录' };
-        } else {
-          try {
-            // 优先从本地存储获取用户信息
-            const storedUser = localStorage.getItem('user');
-            if (storedUser) {
-              const parsedUser = JSON.parse(storedUser);
-              console.log('✅ 从本地存储获取用户信息:', parsedUser.username);
-              return { 
-                success: true, 
-                user: parsedUser, 
-                message: '获取成功' 
-              };
-            }
-            
-            // 如果本地存储没有用户信息，尝试从API获取
-            const response = await fetch(`${API_BASE_URL}/user/profile`, {
-              headers: { 'Authorization': `Bearer ${token}` },
-            });
-            const res = await response.json();
-            
-            if (res && res.data) {
-              return { 
-                success: true, 
-                user: res.data, 
-                message: '获取成功' 
-              };
-            } else {
-              return { success: false, message: '获取用户信息失败' };
-            }
-          } catch (err) {
-            console.error('Get profile error:', err);
-            
-            // 捕获错误时，尝试从本地存储获取用户信息
-            const storedUser = localStorage.getItem('user');
-            if (storedUser) {
-              const parsedUser = JSON.parse(storedUser);
-              return { 
-                success: true, 
-                user: parsedUser, 
-                message: '获取成功' 
-              };
-            }
-            
-            return { success: false, message: '网络异常，请稍后重试' };
-          }
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<any>("/user/profile", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (backendRes?.code === 200 && backendRes.data) {
+          persistCurrentUserProfile(backendRes.data);
+          return { success: true, user: backendRes.data, message: backendRes.message || "获取成功" };
         }
+
+        const current = getCurrentUser(token);
+        if (current) {
+          const user = {
+            userId: current.userId,
+            username: current.username,
+            email: current.email,
+            avatar: current.avatar,
+            createTime: current.createTime,
+          };
+          persistCurrentUserProfile(user);
+          return { success: true, user, message: "获取成功" };
+        }
+
+        const local = safeParse<any>(localStorage.getItem("user"), null);
+        if (local) return { success: true, user: local, message: "获取成功" };
+
+        return fail("用户未登录");
       })(),
 
-    updateProfile: (data: { username?: string; email?: string; avatar?: string }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          // 从token中提取用户名
-          const usernameMatch = token.match(/mock_token_(.+?)_/);
-          if (usernameMatch) {
-            const oldUsername = usernameMatch[1];
-            const user = mockUsers.get(oldUsername);
-            if (user) {
-              // 更新用户信息
-              if (data.username && data.username !== oldUsername) {
-                // 检查新用户名是否已存在
-                for (const existingUser of mockUsers.values()) {
-                  if (existingUser.username === data.username) {
-                    return { success: false, message: '用户名已存在' };
-                  }
-                }
-                // 移到新用户名
-                mockUsers.delete(oldUsername);
-                mockUsers.set(data.username, {
-                  ...user,
-                  username: data.username,
-                  email: data.email || user.email,
-                  avatar: data.avatar || user.avatar
-                });
-              } else {
-                // 更新现有用户
-                mockUsers.set(oldUsername, {
-                  ...user,
-                  email: data.email || user.email,
-                  avatar: data.avatar || user.avatar
-                });
-              }
-              console.log('✅ Mock更新用户信息成功');
-              return { success: true, message: '修改成功' };
-            }
-          }
-          return { success: false, message: '用户未登录' };
-        } else {
-          return handleResponse(
-            fetch(`${API_BASE_URL}/user/profile`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify(data),
-            }).then((res) => res.json()) as Promise<ApiResponse<null>>
-          );
+    updateProfile: (data: { username?: string; email?: string; avatar?: string; bio?: string }, token: string) =>
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<null>("/user/profile", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (backendRes?.code === 200) {
+          const local = safeParse<any>(localStorage.getItem("user"), {});
+          persistCurrentUserProfile({ ...local, ...data });
+          return ok(undefined, backendRes.message || "修改成功");
         }
+
+        const username = extractUsernameFromToken(token);
+        if (!username) return fail("用户未登录");
+
+        const users = getMockUsers();
+        const idx = users.findIndex((u) => u.username === username);
+        if (idx < 0) return fail("用户未登录");
+
+        if (data.username && data.username !== username) {
+          const duplicate = users.some((u, i) => i !== idx && u.username === data.username);
+          if (duplicate) return fail("用户名已存在");
+        }
+
+        users[idx] = { ...users[idx], ...data, username: data.username || users[idx].username };
+        saveMockUsers(users);
+
+        if (data.username && data.username !== username) {
+          const map = getTokenUserMap();
+          map[token] = data.username;
+          saveTokenUserMap(map);
+        }
+
+        persistCurrentUserProfile(users[idx]);
+        return ok(undefined, "修改成功");
       })(),
 
     updatePassword: (data: { oldPassword: string; newPassword: string }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          // 从token中提取用户名
-          const usernameMatch = token.match(/mock_token_(.+?)_/);
-          if (usernameMatch) {
-            const username = usernameMatch[1];
-            const user = mockUsers.get(username);
-            if (user) {
-              const hashedOldPassword = await hashPassword(data.oldPassword);
-              if (user.password === hashedOldPassword) {
-                const hashedNewPassword = await hashPassword(data.newPassword);
-                mockUsers.set(username, {
-                  ...user,
-                  password: hashedNewPassword
-                });
-                console.log('✅ Mock修改密码成功');
-                return { success: true, message: '密码修改成功' };
-              } else {
-                return { success: false, message: '旧密码错误' };
-              }
-            }
-          }
-          return { success: false, message: '用户未登录' };
-        } else {
-          return handleResponse(
-            (async () => {
-              const hashedOldPassword = await hashPassword(data.oldPassword);
-              const hashedNewPassword = await hashPassword(data.newPassword);
-              const response = await fetch(`${API_BASE_URL}/user/password`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ oldPassword: hashedOldPassword, newPassword: hashedNewPassword }),
-              });
-              return response.json();
-            })() as Promise<ApiResponse<null>>
-          );
-        }
+      (async (): Promise<ApiResult> => {
+        const payload = {
+          oldPassword: await hashPassword(data.oldPassword),
+          newPassword: await hashPassword(data.newPassword),
+        };
+
+        const backendRes = await requestJson<null>("/user/password", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (backendRes?.code === 200) return ok(undefined, backendRes.message || "密码修改成功");
+
+        const username = extractUsernameFromToken(token);
+        if (!username) return fail("用户未登录");
+
+        const users = getMockUsers();
+        const idx = users.findIndex((u) => u.username === username);
+        if (idx < 0) return fail("用户未登录");
+        if (users[idx].password !== payload.oldPassword) return fail("旧密码错误");
+
+        users[idx].password = payload.newPassword;
+        saveMockUsers(users);
+        return ok(undefined, "密码修改成功");
       })(),
 
     resetPassword: (data: { email: string }) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          // 检查邮箱是否存在
-          let found = false;
-          for (const user of mockUsers.values()) {
-            if (user.email === data.email) {
-              found = true;
-              break;
-            }
-          }
-          if (found) {
-            console.log('✅ Mock重置密码邮件发送:', data.email);
-            return { success: true, message: '重置邮件已发送，请查收邮箱' };
-          } else {
-            return { success: false, message: '邮箱不存在' };
-          }
-        } else {
-          return handleResponse(
-            fetch(`${API_BASE_URL}/user/password/reset`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data),
-            }).then((res) => res.json()) as Promise<ApiResponse<null>>
-          );
-        }
+      (async (): Promise<ApiResult> => {
+        const payload = { email: data.email.trim() };
+
+        const backendRes = await requestJson<null>("/user/password/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (backendRes?.code === 200) return ok(undefined, backendRes.message || "重置邮件已发送，请查收邮箱");
+
+        const users = getMockUsers();
+        const exists = users.some((u) => u.email === payload.email);
+        if (!exists) return fail("邮箱不存在");
+        return ok(undefined, "重置邮件已发送，请查收邮箱");
       })(),
 
     uploadAudio: (data: FormData, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          const voiceName = data.get('voiceName') as string || `克隆音色${Date.now()}`;
-          const voiceId = 'voice_' + Date.now();
-          
-          // 从token中提取用户名
-          const usernameMatch = token.match(/mock_token_(.+?)_/);
-          const username = usernameMatch ? usernameMatch[1] : 'unknown';
-          
-          // 保存音频样本
-          mockAudioSamples.set(voiceId, {
-            voiceId: voiceId,
-            voiceName: voiceName,
-            default: false,
-            username: username
-          });
-          
-          // 保存到本地存储
-          saveMockAudioSamples();
-          
-          console.log('✅ Mock上传音频样本:', voiceName);
-          return { success: true, data: voiceId, message: '创建成功' };
-        } else {
-          try {
-            const voiceName = data.get('voiceName') as string || `克隆音色${Date.now()}`;
-            const voiceId = 'voice_' + Date.now();
-            
-            // 从token中提取用户名
-            const usernameMatch = token.match(/mock_token_(.+?)_/);
-            const username = usernameMatch ? usernameMatch[1] : 'unknown';
-            
-            // 保存音频样本到本地存储
-            const storedSamples = localStorage.getItem('mockAudioSamples');
-            const audioSamples = storedSamples ? JSON.parse(storedSamples) : {};
-            
-            audioSamples[voiceId] = {
-              voiceId: voiceId,
-              voiceName: voiceName,
-              default: false,
-              username: username
-            };
-            
-            localStorage.setItem('mockAudioSamples', JSON.stringify(audioSamples));
-            
-            console.log('✅ 保存音频样本:', voiceName);
-            return { success: true, data: voiceId, message: '创建成功' };
-          } catch (err) {
-            console.error('Upload audio error:', err);
-            return { success: false, message: '网络异常，请稍后重试' };
-          }
+      (async (): Promise<ApiResult<string>> => {
+        const backendRes = await requestJson<string>("/user/audio", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: data,
+        });
+
+        if (backendRes?.code === 200 && backendRes.data) {
+          return ok(backendRes.data, backendRes.message || "创建成功");
         }
+
+        const username = extractUsernameFromToken(token) || "guest";
+        const voiceName = ((data.get("voiceName") as string) || "自定义音色").trim();
+        const voices = getMockVoices();
+        const voiceId = generateId("voice");
+
+        voices.push({
+          voiceId,
+          voiceName,
+          default: false,
+          username,
+        });
+        saveMockVoices(voices);
+
+        return ok(voiceId, "创建成功");
       })(),
 
     updateAudioName: (data: { voiceId: string; voiceName: string }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock修改音频样本名称:', data.voiceName);
-          return { success: true, message: '修改成功' };
-        } else {
-          return handleResponse(
-            fetch(`${API_BASE_URL}/user/audio`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify(data),
-            }).then((res) => res.json()) as Promise<ApiResponse<null>>
-          );
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<null>("/user/audio", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (backendRes?.code === 200) return ok(undefined, backendRes.message || "修改成功");
+
+        const voices = getMockVoices();
+        const idx = voices.findIndex((v) => v.voiceId === data.voiceId);
+        if (idx >= 0) {
+          voices[idx].voiceName = data.voiceName;
+          saveMockVoices(voices);
         }
+
+        return ok(undefined, "修改成功");
       })(),
 
     getAudioList: (token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock获取音频样本列表');
-          
-          // 从token中提取用户名
-          const usernameMatch = token.match(/mock_token_(.+?)_/);
-          const username = usernameMatch ? usernameMatch[1] : 'unknown';
-          
-          // 获取用户的音频样本
-          const userSamples = Array.from(mockAudioSamples.values()).filter(sample => 
-            sample.username === username || sample.default
-          );
-          
-          // 如果没有用户样本，返回默认样本
-          if (userSamples.length === 0) {
-            return { 
-              success: true, 
-              data: [
-                { voiceId: 'voice_1', voiceName: '默认音色', default: true },
-                { voiceId: 'voice_2', voiceName: '温暖男声', default: false },
-                { voiceId: 'voice_3', voiceName: '甜美女声', default: false }
-              ], 
-              message: '获取成功' 
-            };
-          }
-          
-          return { 
-            success: true, 
-            data: userSamples,
-            message: '获取成功' 
-          };
-        } else {
-          try {
-            // 从本地存储获取音频样本列表
-            const storedSamples = localStorage.getItem('mockAudioSamples');
-            const audioSamples = storedSamples ? JSON.parse(storedSamples) : {};
-            
-            // 从token中提取用户名
-            const usernameMatch = token.match(/mock_token_(.+?)_/);
-            const username = usernameMatch ? usernameMatch[1] : 'unknown';
-            
-            // 获取用户的音频样本
-            const userSamples = Object.values(audioSamples).filter((sample: any) => 
-              sample.username === username || sample.default
-            );
-            
-            // 如果没有用户样本，返回默认样本
-            if (userSamples.length === 0) {
-              return { 
-                success: true, 
-                data: [
-                  { voiceId: 'voice_1', voiceName: '默认音色', default: true },
-                  { voiceId: 'voice_2', voiceName: '温暖男声', default: false },
-                  { voiceId: 'voice_3', voiceName: '甜美女声', default: false }
-                ], 
-                message: '获取成功' 
-              };
-            }
-            
-            console.log('✅ 从本地存储获取音频样本列表:', userSamples.length);
-            return { 
-              success: true, 
-              data: userSamples,
-              message: '获取成功' 
-            };
-          } catch (err) {
-            console.error('Get audio list error:', err);
-            return { success: false, message: '网络异常，请稍后重试' };
-          }
+      (async (): Promise<ApiResult<MockVoice[]>> => {
+        const backendRes = await requestJson<MockVoice[]>("/user/audio", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (backendRes?.code === 200 && Array.isArray(backendRes.data)) {
+          return ok(backendRes.data, backendRes.message || "获取成功");
         }
+
+        const username = extractUsernameFromToken(token) || "guest";
+        const voices = getMockVoices().filter((v) => v.username === username || v.default);
+
+        if (voices.length > 0) return ok(voices, "获取成功");
+
+        return ok(
+          [
+            { voiceId: "voice_1", voiceName: "默认音色", default: true, username: "system" },
+            { voiceId: "voice_2", voiceName: "温暖男声", default: true, username: "system" },
+            { voiceId: "voice_3", voiceName: "甜美女声", default: true, username: "system" },
+          ],
+          "获取成功",
+        );
       })(),
 
     deleteAudio: (voiceId: string, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock删除音频样本:', voiceId);
-          return { success: true, message: '删除成功' };
-        } else {
-          return handleResponse(
-            fetch(`${API_BASE_URL}/user/audio/${voiceId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` },
-            }).then((res) => res.json()) as Promise<ApiResponse<null>>
-          );
-        }
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<null>(`/user/audio/${voiceId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (backendRes?.code === 200) return ok(undefined, backendRes.message || "删除成功");
+
+        const voices = getMockVoices().filter((v) => v.voiceId !== voiceId);
+        saveMockVoices(voices);
+        return ok(undefined, "删除成功");
       })(),
   },
 
   story: {
-    list: (params: { page: number; pageSize: number }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock获取故事列表');
-          // 从本地存储获取故事列表
-          const storedStories = localStorage.getItem('stories');
-          if (storedStories) {
-            const stories = JSON.parse(storedStories);
-            return { 
-              success: true, 
-              data: stories, 
-              message: '获取成功'
-            };
-          }
-          // 如果本地存储没有故事，返回默认故事
-          return { 
-            success: true, 
-            data: [
-              {
-                id: 'story_1',
-                title: '童话故事',
-                summary: '一个美丽的童话故事',
-                createdAt: new Date().toISOString(),
-                hasVoice: true
-              },
-              {
-                id: 'story_2',
-                title: '冒险故事',
-                summary: '一次激动人心的冒险',
-                createdAt: new Date().toISOString(),
-                hasVoice: false
-              }
-            ],
-            message: '获取成功'
-          };
-        } else {
-          try {
-            // 从本地存储获取故事列表
-            const storedStories = localStorage.getItem('stories');
-            if (storedStories) {
-              const stories = JSON.parse(storedStories);
-              return { 
-                success: true, 
-                data: stories, 
-                message: '获取成功'
-              };
-            }
-            // 如果本地存储没有故事，返回默认故事
-            return { 
-              success: true, 
-              data: [
-                {
-                  id: 'story_1',
-                  title: '童话故事',
-                  summary: '一个美丽的童话故事',
-                  createdAt: new Date().toISOString(),
-                  hasVoice: true
-                },
-                {
-                  id: 'story_2',
-                  title: '冒险故事',
-                  summary: '一次激动人心的冒险',
-                  createdAt: new Date().toISOString(),
-                  hasVoice: false
-                }
-              ],
-              message: '获取成功'
-            };
-          } catch (err) {
-            console.error('Get story list error:', err);
-            return { success: false, message: '网络异常，请稍后重试' };
+    list: (params: { page: number; pageSize: number; title?: string }, token: string) =>
+      (async (): Promise<ApiResult<MockStory[]>> => {
+        const query = new URLSearchParams({
+          page: String(params.page),
+          pageSize: String(params.pageSize),
+          ...(params.title ? { title: params.title } : {}),
+        });
+
+        const backendRes = await requestJson<any>(`/project/list?${query.toString()}`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (backendRes?.code === 200 || backendRes?.code === 0) {
+          const lists = backendRes.data?.lists || backendRes.data?.date?.lists;
+          if (Array.isArray(lists)) {
+            const mapped: MockStory[] = lists.map((item: any) => ({
+              id: item.projectId,
+              title: item.title || "未命名故事",
+              summary: item.description || "",
+              createdAt: new Date().toISOString(),
+              hasVoice: false,
+            }));
+            saveMockStories(mapped);
+            return ok(mapped, backendRes.message || "获取成功");
           }
         }
+
+        const stories = getMockStories();
+        return ok(stories, "获取成功");
       })(),
 
     get: (storyId: string, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock获取故事详情:', storyId);
-          return { 
-            success: true, 
-            data: {
-              id: storyId,
-              title: '童话故事',
-              content: '从前有一个美丽的王国...',
-              segments: [
-                { index: 0, text: '从前有一个美丽的王国', emotion: 'happy' },
-                { index: 1, text: '王国里住着一位公主', emotion: 'calm' }
-              ],
-              createdAt: new Date().toISOString()
-            },
-            message: '获取成功'
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<any>(`/story/list/${storyId}`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if ((backendRes?.code === 200 || backendRes?.code === 0) && backendRes.data) {
+          const payload = {
+            id: storyId,
+            title: backendRes.data.title || "未命名故事",
+            content: backendRes.data.content || "",
+            segments: [{ index: 0, text: backendRes.data.content || "", emotion: "calm" }],
+            createdAt: backendRes.data.createTime || new Date().toISOString(),
           };
-        } else {
-          return fetch(`${API_BASE_URL}/story/${storyId}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          }).then((res) => res.json());
+          return ok(payload, backendRes.message || "获取成功");
         }
+
+        const story = getMockStories().find((s) => s.id === storyId);
+        if (story) {
+          return ok(
+            {
+              id: story.id,
+              title: story.title,
+              content: story.content || story.summary || "",
+              segments: story.segments || [{ index: 0, text: story.content || story.summary || "", emotion: "calm" }],
+              createdAt: story.createdAt,
+            },
+            "获取成功",
+          );
+        }
+
+        return fail("故事不存在");
       })(),
 
     create: (data: { theme: string; style: string; targetAge: string; length: string }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          const storyId = 'story_' + Date.now();
-          console.log('✅ Mock创建故事:', storyId);
-          
-          // 保存到本地存储
-          const storedStories = localStorage.getItem('stories');
-          const stories = storedStories ? JSON.parse(storedStories) : [];
-          
-          stories.push({
-            id: storyId,
-            title: data.theme || '新故事',
-            summary: `主题: ${data.theme}, 风格: ${data.style}, 目标年龄: ${data.targetAge}, 长度: ${data.length}`,
-            createdAt: new Date().toISOString(),
-            hasVoice: false
-          });
-          
-          localStorage.setItem('stories', JSON.stringify(stories));
-          
-          return { 
-            success: true, 
-            data: { id: storyId },
-            message: '创建成功'
-          };
-        } else {
-          try {
-            const storyId = 'story_' + Date.now();
-            console.log('✅ 创建故事:', storyId);
-            
-            // 保存到本地存储
-            const storedStories = localStorage.getItem('stories');
-            const stories = storedStories ? JSON.parse(storedStories) : [];
-            
-            stories.push({
-              id: storyId,
-              title: data.theme || '新故事',
-              summary: `主题: ${data.theme}, 风格: ${data.style}, 目标年龄: ${data.targetAge}, 长度: ${data.length}`,
-              createdAt: new Date().toISOString(),
-              hasVoice: false
-            });
-            
-            localStorage.setItem('stories', JSON.stringify(stories));
-            
-            return { 
-              success: true, 
-              data: { id: storyId },
-              message: '创建成功'
-            };
-          } catch (err) {
-            console.error('Create story error:', err);
-            return { success: false, message: '网络异常，请稍后重试' };
-          }
+      (async (): Promise<ApiResult<{ id: string }>> => {
+        const payload = {
+          theme: data.theme,
+          style: data.style,
+          keyword: data.targetAge,
+          prompt: "",
+          number: "3",
+          length: data.length,
+        };
+
+        const backendRes = await requestJson<null>("/story/ai", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const stories = getMockStories();
+        const id = generateId("story");
+
+        stories.unshift({
+          id,
+          title: data.theme || "新故事",
+          summary: `主题: ${data.theme} 风格: ${data.style} 年龄: ${data.targetAge} 长度: ${data.length}`,
+          content: "",
+          segments: [],
+          createdAt: new Date().toISOString(),
+          hasVoice: false,
+        });
+        saveMockStories(stories);
+
+        if (backendRes?.code === 200 || backendRes?.code === 0) {
+          return ok({ id }, backendRes.message || "创建成功");
         }
+        return ok({ id }, "创建成功");
       })(),
 
     update: (storyId: string, data: { title: string; content: string; segments: Array<{ index: number; text: string; emotion: string }> }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock更新故事:', storyId);
-          return { success: true, message: '更新成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/story/${storyId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(data),
-          }).then((res) => res.json());
+      (async (): Promise<ApiResult> => {
+        const payload = {
+          projectId: storyId,
+          title: data.title,
+          content: data.content,
+        };
+
+        const backendRes = await requestJson<null>("/story", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const stories = getMockStories();
+        const idx = stories.findIndex((s) => s.id === storyId);
+        if (idx >= 0) {
+          stories[idx] = {
+            ...stories[idx],
+            title: data.title,
+            content: data.content,
+            summary: data.content.slice(0, 120),
+            segments: data.segments,
+          };
+          saveMockStories(stories);
         }
+
+        if (backendRes?.code === 200 || backendRes?.code === 0) return ok(undefined, backendRes.message || "更新成功");
+        return ok(undefined, "更新成功");
       })(),
 
     delete: (storyId: string, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock删除故事:', storyId);
-          return { success: true, message: '删除成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/story/${storyId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
-          }).then((res) => res.json());
-        }
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<null>(`/story/${storyId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const stories = getMockStories().filter((s) => s.id !== storyId);
+        saveMockStories(stories);
+
+        if (backendRes?.code === 200 || backendRes?.code === 0) return ok(undefined, backendRes.message || "删除成功");
+        return ok(undefined, "删除成功");
       })(),
 
-    import: (data: FormData, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock导入故事');
-          return { success: true, data: { id: 'story_' + Date.now() }, message: '导入成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/story/import`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-            body: data,
-          }).then((res) => res.json());
-        }
+    import: (_data: FormData, _token: string) =>
+      (async (): Promise<ApiResult<{ id: string }>> => {
+        const id = generateId("story");
+        return ok({ id }, "导入成功");
       })(),
 
     export: (storyId: string, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock导出故事:', storyId);
-          return new Blob(['故事内容'], { type: 'text/plain' });
-        } else {
-          return fetch(`${API_BASE_URL}/story/export?storyId=${storyId}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          }).then((res) => res.blob());
+      (async (): Promise<Blob> => {
+        try {
+          if (!USE_MOCK_DATA) {
+            const response = await fetch(`${API_BASE_URL}/story/export/${storyId}`, {
+              method: "GET",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) return await response.blob();
+          }
+        } catch (error) {
+          console.error("Export story error:", error);
         }
+
+        const story = getMockStories().find((s) => s.id === storyId);
+        return new Blob([story?.content || story?.summary || "故事内容"], { type: "text/plain;charset=utf-8" });
       })(),
   },
 
   voice: {
     synthesize: (data: { storyId: string; segmentIndex: number; text: string; voiceId: string; emotion: string; speed: number; pitch: number }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock语音合成');
-          return { success: true, data: { audioId: 'audio_' + Date.now() }, message: '合成成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/voice/synthesize`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(data),
-          }).then((res) => res.json());
+      (async (): Promise<ApiResult<{ audioId: string }>> => {
+        const payload = {
+          projectId: data.storyId,
+          voiceIds: [data.voiceId],
+          style: data.emotion,
+          prompt: data.text,
+          speechRate: data.speed,
+        };
+
+        const backendRes = await requestJson<any>("/audio", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (backendRes?.code === 200 && backendRes.data?.audioId) {
+          return ok({ audioId: backendRes.data.audioId }, backendRes.message || "合成成功");
         }
+
+        return ok({ audioId: generateId("audio") }, "合成成功");
       })(),
 
-    styles: (token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock获取语音风格');
-          return { 
-            success: true, 
-            data: [
-              { id: 'style_1', name: '默认风格' },
-              { id: 'style_2', name: '欢快风格' },
-              { id: 'style_3', name: '悲伤风格' }
-            ],
-            message: '获取成功'
-          };
-        } else {
-          return fetch(`${API_BASE_URL}/voice/styles`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          }).then((res) => res.json());
-        }
+    styles: (_token: string) =>
+      (async (): Promise<ApiResult<Array<{ id: string; name: string }>>> => {
+        return ok(
+          [
+            { id: "style_1", name: "默认风格" },
+            { id: "style_2", name: "欢快风格" },
+            { id: "style_3", name: "温柔风格" },
+          ],
+          "获取成功",
+        );
       })(),
 
     adjustSpeed: (data: { audioId: string; speed: number }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock调整语速');
-          return { success: true, message: '调整成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/voice/speed`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(data),
-          }).then((res) => res.json());
-        }
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<null>("/audio", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ audioId: data.audioId, title: `语速${data.speed}` }),
+        });
+
+        if (backendRes?.code === 200 || backendRes?.code === 0) return ok(undefined, backendRes.message || "调整成功");
+        return ok(undefined, "调整成功");
       })(),
 
     background: (data: { audioId: string; bgmId: string; volume: number }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock添加背景音乐');
-          return { success: true, message: '添加成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/voice/background`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(data),
-          }).then((res) => res.json());
-        }
+      (async (): Promise<ApiResult> => {
+        const backendRes = await requestJson<any>("/audio/bgm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (backendRes?.code === 200) return ok(backendRes.data, backendRes.message || "添加成功");
+        return ok({ audioId: `${data.audioId}_bgm` }, "添加成功");
       })(),
 
-    mix: (data: { audioIds: string[]; volumes: number[]; mixType: string }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock混音');
-          return { success: true, data: { audioId: 'mixed_' + Date.now() }, message: '混音成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/voice/mix`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(data),
-          }).then((res) => res.json());
-        }
+    mix: (_data: { audioIds: string[]; volumes: number[]; mixType: string }, _token: string) =>
+      (async (): Promise<ApiResult<{ audioId: string }>> => {
+        return ok({ audioId: generateId("mixed") }, "混音成功");
       })(),
 
     custom: (data: FormData, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock自定义语音');
-          return { success: true, data: { voiceId: 'custom_' + Date.now() }, message: '创建成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/voice/custom`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-            body: data,
-          }).then((res) => res.json());
-        }
+      (async (): Promise<ApiResult<{ voiceId: string }>> => {
+        const res = await api.user.uploadAudio(data, token);
+        if (!res.success || !res.data) return fail(res.message || "创建失败");
+        return ok({ voiceId: res.data }, "创建成功");
       })(),
 
-    edit: (data: { audioId: string; startTime: number; endTime: number }, token: string) =>
-      (async () => {
-        if (USE_MOCK_DATA) {
-          console.log('✅ Mock编辑音频');
-          return { success: true, message: '编辑成功' };
-        } else {
-          return fetch(`${API_BASE_URL}/voice/edit`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(data),
-          }).then((res) => res.json());
-        }
+    edit: (_data: { audioId: string; startTime: number; endTime: number }, _token: string) =>
+      (async (): Promise<ApiResult> => {
+        return ok(undefined, "编辑成功");
       })(),
+  },
+
+  project: {
+    create: (data: { title: string; description?: string }, token: string) =>
+      requestJson<string>("/project", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      }),
+
+    update: (data: { projectId: string; title?: string; description?: string }, token: string) =>
+      requestJson<null>("/project", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      }),
+
+    remove: (projectId: string, token: string) =>
+      requestJson<null>(`/project/${projectId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }),
   },
 };

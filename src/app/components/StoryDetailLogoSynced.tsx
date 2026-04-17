@@ -11,6 +11,8 @@ interface Story {
   content: string;
   createdAt: string;
   hasVoice: boolean;
+  hasImage?: boolean;
+  hasVideo?: boolean;
   voiceType?: string;
   cover?: string;
   segments?: Array<{ index: number; text: string; emotion: string }>;
@@ -31,6 +33,8 @@ export function StoryDetailLogoSynced() {
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
 
   useEffect(() => {
     if (id) fetchStoryDetail(id);
@@ -96,6 +100,52 @@ export function StoryDetailLogoSynced() {
     }
   };
 
+  const updateLocalStory = (updater: (current: Story) => Story) => {
+    if (!story) return;
+    const nextStory = updater(story);
+    setStory(nextStory);
+    const storedStories = localStorage.getItem("stories");
+    if (!storedStories) return;
+    const stories = JSON.parse(storedStories);
+    const updatedStories = stories.map((s: Story) => (s.id === nextStory.id ? { ...s, ...nextStory } : s));
+    localStorage.setItem("stories", JSON.stringify(updatedStories));
+  };
+
+  const handleGenerateImage = async () => {
+    if (!story || !story.hasVoice) return;
+    setImageLoading(true);
+    setError("");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      updateLocalStory((current) => ({
+        ...current,
+        hasImage: true,
+        cover: current.cover || "/src/assets/images/bg.jpg",
+      }));
+    } catch {
+      setError("生成图片失败，请稍后重试");
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleGenerateVideo = async () => {
+    if (!story || !story.hasImage) return;
+    setVideoLoading(true);
+    setError("");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      updateLocalStory((current) => ({
+        ...current,
+        hasVideo: true,
+      }));
+    } catch {
+      setError("生成视频失败，请稍后重试");
+    } finally {
+      setVideoLoading(false);
+    }
+  };
+
   if (loading && !story) return <div className="flex min-h-screen items-center justify-center bg-[#111209] text-[#ddd6ff]">正在加载故事...</div>;
   if (!story) return <div className="flex min-h-screen items-center justify-center bg-[#111209] text-[#ddd6ff]">{error || "故事不存在"}</div>;
 
@@ -139,7 +189,7 @@ export function StoryDetailLogoSynced() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#63549f]"><span className="text-sm font-medium">2</span></div>
                     <h4 className="font-medium text-[#f4f0ff]">AI 配音</h4>
                   </div>
-                  <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                  <div className={`h-3 w-3 rounded-full ${story.hasVoice ? "bg-green-500" : "bg-yellow-500"}`}></div>
                 </div>
                 <Link to={`/voice/${story.id}`} className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63]"><Mic className="h-4 w-4" />选择音色</Link>
               </div>
@@ -149,9 +199,16 @@ export function StoryDetailLogoSynced() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]"><span className="text-sm font-medium">3</span></div>
                     <h4 className="font-medium text-[#f4f0ff]">AI 生图</h4>
                   </div>
-                  <div className="h-3 w-3 rounded-full bg-gray-500"></div>
+                  <div className={`h-3 w-3 rounded-full ${story.hasImage ? "bg-green-500" : "bg-gray-500"}`}></div>
                 </div>
-                <button className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#bdb5e7]" disabled><Video className="h-4 w-4" />生成图片</button>
+                <button
+                  onClick={handleGenerateImage}
+                  className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63] disabled:text-[#bdb5e7] disabled:hover:bg-[#312752]"
+                  disabled={!story.hasVoice || imageLoading}
+                >
+                  <Video className="h-4 w-4" />
+                  {imageLoading ? "生成中..." : "生成图片"}
+                </button>
               </div>
               <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 p-4">
                 <div className="mb-3 flex items-center justify-between">
@@ -159,9 +216,16 @@ export function StoryDetailLogoSynced() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]"><span className="text-sm font-medium">4</span></div>
                     <h4 className="font-medium text-[#f4f0ff]">AI 生成视频</h4>
                   </div>
-                  <div className="h-3 w-3 rounded-full bg-gray-500"></div>
+                  <div className={`h-3 w-3 rounded-full ${story.hasVideo ? "bg-green-500" : "bg-gray-500"}`}></div>
                 </div>
-                <button className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#bdb5e7]" disabled><Video className="h-4 w-4" />生成视频</button>
+                <button
+                  onClick={handleGenerateVideo}
+                  className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63] disabled:text-[#bdb5e7] disabled:hover:bg-[#312752]"
+                  disabled={!story.hasImage || videoLoading}
+                >
+                  <Video className="h-4 w-4" />
+                  {videoLoading ? "生成中..." : "生成视频"}
+                </button>
               </div>
             </div>
           </div>

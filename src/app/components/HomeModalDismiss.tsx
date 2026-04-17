@@ -110,16 +110,16 @@ export function HomeModalDismiss() {
       setUser(localUser);
       setEditingUser(localUser);
       localStorage.setItem("user", JSON.stringify(localUser));
-      closeModal();
+      setShowUserModal(false);
     };
     try {
-      const response = await api.user.updateProfile({ username: nextUser.username, email: nextUser.email, avatar: nextUser.avatar }, token);
+      const response = await api.user.updateProfile({ username: nextUser.username, email: nextUser.email, avatar: nextUser.avatar, bio: nextUser.bio }, token);
       if (response.success) {
         const mergedUser = normalizeUser({ ...response.user, ...nextUser, bio: nextUser.bio });
         setUser(mergedUser);
         setEditingUser(mergedUser);
         localStorage.setItem("user", JSON.stringify(mergedUser));
-        closeModal();
+        setShowUserModal(false);
       } else {
         saveToLocal();
       }
@@ -141,11 +141,28 @@ export function HomeModalDismiss() {
       setPasswordError("两次输入的新密码不一致");
       return;
     }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setPasswordError("请先登录");
+      return;
+    }
     setPasswordSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setPasswordMessage("密码修改表单已准备完成，当前为前端演示状态");
-      setPasswordForm(defaultPasswordForm);
+      const response = await api.user.updatePassword(
+        {
+          oldPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        },
+        token,
+      );
+      if (response.success) {
+        setPasswordMessage("修改成功");
+        setPasswordForm(defaultPasswordForm);
+      } else {
+        setPasswordError(response.message || "修改失败");
+      }
+    } catch {
+      setPasswordError("网络错误，请稍后重试");
     } finally {
       setPasswordSaving(false);
     }
