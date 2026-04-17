@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router";
 import { BookOpen, Plus, User, Save, X, LogOut, Trash2, KeyRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
+import { AppHeader } from "./AppHeader";
 
 interface Story {
   id: string;
@@ -178,27 +179,7 @@ export function HomeModalDismiss() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-white">
-      <header className="border-b border-[#6b75c9]/20 bg-[#111209]/88 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]"><BookOpen className="h-5 w-5 text-white" /></div>
-              <span className="text-lg font-semibold text-[#e4ddff]">梦境编织者</span>
-            </div>
-            <nav className="flex items-center gap-2 rounded-full border border-[#6b75c9]/25 bg-[#231c40]/70 px-2 py-2 shadow-lg shadow-black/10">
-              <Link to="/" className="rounded-full px-4 py-2 text-sm font-medium text-[#efeaff] transition-colors hover:bg-[#63549f]/45 hover:text-white">书藏馆</Link>
-              <Link to="/create" className="rounded-full px-4 py-2 text-sm font-medium text-[#d9d0ff] transition-colors hover:bg-[#63549f]/45 hover:text-white">创作工坊</Link>
-              <Link to="/voice-lab" className="rounded-full px-4 py-2 text-sm font-medium text-[#d9d0ff] transition-colors hover:bg-[#63549f]/45 hover:text-white">声音实验室</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-[#a7a8b7]">{displayUser.username}</span>
-            <button onClick={() => setShowUserModal(true)} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#63549f]/40 transition-colors hover:bg-[#63549f]/65">
-              {displayUser.avatar ? <img src={displayUser.avatar} alt={displayUser.username} className="h-10 w-10 rounded-full object-cover" /> : <User className="h-5 w-5 text-white" />}
-            </button>
-          </div>
-        </div>
-      </header>
+      <AppHeader activeTab="home" onAvatarClick={() => setShowUserModal(true)} />
 
       {showUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8" onClick={closeModal}>

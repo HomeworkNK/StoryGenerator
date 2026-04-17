@@ -1,7 +1,8 @@
-import { Link, useNavigate } from "react-router";
-import { BookOpen, Mic, Upload, Trash2, Edit2, X, Check, Radio, Volume2 } from "lucide-react";
+import { Link } from "react-router";
+import { Mic, Upload, Trash2, Edit2, X, Check, Radio, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
+import { AppHeader } from "./AppHeader";
 
 interface VoiceSample {
   voiceId: string;
@@ -22,7 +23,6 @@ if (!document.head.querySelector('style[data-wave="voice-lab"]')) {
 }
 
 export function VoiceLab() {
-  const navigate = useNavigate();
   const [voiceList, setVoiceList] = useState<VoiceSample[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -225,16 +225,7 @@ export function VoiceLab() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-white">
-      <header className="border-b border-[#6b75c9]/20 bg-[#111209]/88 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]">
-              <BookOpen className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-[#e4ddff]">梦境编织者</span>
-          </Link>
-        </div>
-      </header>
+      <AppHeader activeTab="voice" />
 
       <main className="mx-auto max-w-7xl px-6 py-12">
         <div className="mb-8">

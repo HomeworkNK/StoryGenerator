@@ -3,6 +3,7 @@ import { BookOpen, ArrowLeft, Video, Mic, Edit, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { api } from "../../services/api";
+import { AppHeader } from "./AppHeader";
 
 interface Story {
   id: string;
@@ -35,6 +36,7 @@ export function StoryDetailLogoSynced() {
   const [editContent, setEditContent] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
   const [videoLoading, setVideoLoading] = useState(false);
+
 
   useEffect(() => {
     if (id) fetchStoryDetail(id);
@@ -151,28 +153,21 @@ export function StoryDetailLogoSynced() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-white">
-      <header className="border-b border-[#6b75c9]/20 bg-[#111209]/88 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]">
-              <BookOpen className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-[#e4ddff]">梦境编织者</span>
-          </Link>
-        </div>
-      </header>
+      <AppHeader activeTab="create" />
 
-      <main className="mx-auto max-w-7xl px-6 py-12">
-        <Link to="/" className="mb-8 inline-flex items-center gap-2 text-[#d8ddff] transition-colors hover:text-white">
-          <ArrowLeft className="h-4 w-4" />
-          返回首页
-        </Link>
+      <main className="mx-auto max-w-7xl px-6 py-0">
         {error && <div className="mb-6 rounded-lg bg-red-500/20 p-3 text-red-200">{error}</div>}
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="md:col-span-1">
             <div className="space-y-6">
-              <h3 className="mb-4 text-lg font-semibold text-[#f4f0ff]">工作流</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <Link to="/" className="inline-flex items-center gap-2 text-[#d8ddff] transition-colors hover:text-white">
+                  <ArrowLeft className="h-4 w-4" />
+                  返回首页
+                </Link>
+                <h3 className="text-lg font-semibold text-[#f4f0ff]">工作流</h3>
+              </div>
               <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">

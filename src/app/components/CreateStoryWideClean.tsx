@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router";
-import { BookOpen, X, Sparkles, Clipboard, FileText } from "lucide-react";
+import { X, Sparkles, Clipboard, FileText } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../services/api";
+import { AppHeader } from "./AppHeader";
 
 interface LocalStory {
   id: string;
@@ -96,17 +97,10 @@ export function CreateStoryWideClean() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#111209]/95 text-[#f2efff] backdrop-blur-sm">
-      <div className="mx-6 w-full max-w-6xl">
-        <div className="mb-8 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]">
-              <BookOpen className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-[#e4ddff]">梦境编织者</span>
-          </Link>
-        </div>
+      <div className="w-full">
+        <AppHeader activeTab="create" />
 
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-[30px] border border-[#6b75c9]/30 bg-[#231c40] p-8 shadow-2xl shadow-black/20 lg:p-10">
+        <div className="mx-auto mt-8 max-w-5xl overflow-hidden rounded-[30px] border border-[#6b75c9]/30 bg-[#231c40] p-8 shadow-2xl shadow-black/20 lg:p-10">
           <div className="mb-8 flex items-start justify-between">
             <h2 className="text-2xl font-semibold text-[#f7f3ff]">编织一个新梦境</h2>
             <Link to="/" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#312752] text-[#f2efff] transition-colors hover:bg-[#3a2d63]">
@@ -114,9 +108,9 @@ export function CreateStoryWideClean() {
             </Link>
           </div>
 
-          {error && <div className="mb-6 rounded-lg bg-red-500/20 p-3 text-red-200">{error}</div>}
+          {error && <div className="mb-4 rounded-lg bg-red-500/20 p-3 text-red-200">{error}</div>}
 
-          <div className="mb-6">
+          <div className="mb-4">
             <label className="mb-2 block text-sm text-[#e6e0ff]">故事名称</label>
             <input
               type="text"
@@ -127,7 +121,7 @@ export function CreateStoryWideClean() {
             />
           </div>
 
-          <div className="mb-6 flex border-b border-[#6b75c9]/25">
+          <div className="mb-4 flex border-b border-[#6b75c9]/25">
             <button
               type="button"
               onClick={() => setActiveTab("paste")}
@@ -151,13 +145,13 @@ export function CreateStoryWideClean() {
           </div>
 
           {activeTab === "paste" && (
-            <form onSubmit={handlePasteSubmit} className="space-y-6">
+            <form onSubmit={handlePasteSubmit} className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm text-[#e6e0ff]">故事内容</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[320px] w-full rounded-lg border border-[#6b75c9]/35 bg-[#312752] px-4 py-4 text-[#faf8ff] placeholder:text-[#bfb6ea]"
+                  className="min-h-[60px] w-full rounded-lg border border-[#6b75c9]/35 bg-[#312752] px-4 py-4 text-[#faf8ff] placeholder:text-[#bfb6ea]"
                   placeholder="粘贴或输入故事内容..."
                   required
                 />
@@ -175,15 +169,15 @@ export function CreateStoryWideClean() {
           )}
 
           {activeTab === "ai" && (
-            <form onSubmit={handleAISubmit} className="space-y-6">
-              <div className="grid gap-6 xl:grid-cols-2">
-                <div className="xl:col-span-2">
+            <form onSubmit={handleAISubmit} className="space-y-4">
+              <div className="grid gap-4 xl:grid-cols-3">
+                <div className="xl:col-span-3">
                   <label className="mb-2 block text-sm text-[#e6e0ff]">故事主题</label>
-                  <textarea value={theme} onChange={(e) => setTheme(e.target.value)} className="min-h-[140px] w-full rounded-lg border border-[#6b75c9]/35 bg-[#312752] px-4 py-4 text-[#faf8ff] placeholder:text-[#bfb6ea]" placeholder="例如：一只会飞的小象在巧克力岛上的冒险..." required />
+                  <textarea value={theme} onChange={(e) => setTheme(e.target.value)} className="min-h-[60px] w-full rounded-lg border border-[#6b75c9]/35 bg-[#312752] px-4 py-4 text-[#faf8ff] placeholder:text-[#bfb6ea]" placeholder="例如：一只会飞的小象在巧克力岛上的冒险..." required />
                 </div>
-                <div className="xl:col-span-2">
+                <div className="xl:col-span-3">
                   <label className="mb-2 block text-sm text-[#e6e0ff]">故事简介</label>
-                  <textarea value={summary} onChange={(e) => setSummary(e.target.value)} className="min-h-[100px] w-full rounded-lg border border-[#6b75c9]/35 bg-[#312752] px-4 py-4 text-[#faf8ff] placeholder:text-[#bfb6ea]" placeholder="简要描述故事内容..." />
+                  <textarea value={summary} onChange={(e) => setSummary(e.target.value)} className="min-h-[60px] w-full rounded-lg border border-[#6b75c9]/35 bg-[#312752] px-4 py-4 text-[#faf8ff] placeholder:text-[#bfb6ea]" placeholder="简要描述故事内容..." />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm text-[#e6e0ff]">故事风格</label>
@@ -203,7 +197,7 @@ export function CreateStoryWideClean() {
                     <option value="9+">9岁以上</option>
                   </select>
                 </div>
-                <div className="xl:col-span-2">
+                <div>
                   <label className="mb-2 block text-sm text-[#e6e0ff]">故事长度</label>
                   <select value={length} onChange={(e) => setLength(e.target.value)} className="w-full rounded-lg border border-[#6b75c9]/35 bg-[#312752] px-4 py-3 text-[#faf8ff]">
                     <option value="short">短篇</option>
