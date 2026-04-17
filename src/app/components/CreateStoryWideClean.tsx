@@ -11,6 +11,7 @@ interface LocalStory {
   content: string;
   createdAt: string;
   hasVoice: boolean;
+  aiGenerated?: boolean;
 }
 
 function saveStoryToLocal(story: LocalStory) {
@@ -55,6 +56,7 @@ export function CreateStoryWideClean() {
       summary: content.trim().substring(0, 100) + "...",
       createdAt: new Date().toISOString(),
       hasVoice: false,
+      aiGenerated: false,
     };
     saveStoryToLocal(newStory);
     navigate(`/story/${newStory.id}`);
@@ -81,6 +83,7 @@ export function CreateStoryWideClean() {
           summary: response.data.summary || summary.trim() || theme.trim().slice(0, 100),
           createdAt: response.data.createdAt || new Date().toISOString(),
           hasVoice: Boolean(response.data.hasVoice),
+          aiGenerated: true,
         };
         saveStoryToLocal(optimisticStory);
         navigate(`/story/${response.data.id}`);

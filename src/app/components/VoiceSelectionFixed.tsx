@@ -252,8 +252,6 @@ export function VoiceSelectionFixed() {
             </Link>
           </div>
 
-          <p className="mb-6 text-[#ddd6ff]">在这里选择音色、录制克隆声音，并调整生成后的语速。</p>
-
           {error && <div className="mb-6 rounded-lg bg-red-500/20 p-3 text-red-200">{error}</div>}
 
           <div className="mb-6 flex border-b border-[#6b75c9]/25">
@@ -280,18 +278,18 @@ export function VoiceSelectionFixed() {
           {activeTab === "voice" && (
             <div>
               <h3 className="mb-4 text-lg font-medium text-[#f7f3ff]">选择配音音色</h3>
-              <div className="mb-6 grid grid-cols-2 gap-4">
+              <div className="mb-4 grid grid-cols-3 gap-3">
                 {voiceStyles.map((voice) => (
                   <button
                     key={voice.id}
                     onClick={() => handleVoiceSelect(voice.id)}
-                    className={`rounded-lg border-2 p-4 text-left transition-colors ${selectedVoice === voice.id ? "border-[#8a78b7] bg-[#63549f]/20" : "border-[#6b75c9]/25 bg-[#312752]/50 hover:border-[#6b75c9]"}`}
+                    className={`rounded-lg border-2 px-3 py-2 text-left transition-colors ${selectedVoice === voice.id ? "border-[#8a78b7] bg-[#63549f]/20" : "border-[#6b75c9]/25 bg-[#312752]/50 hover:border-[#6b75c9]"}`}
                   >
-                    <div className="mb-2 flex items-center gap-3">
-                      <Radio className="h-5 w-5 text-[#cfc8ff]" />
-                      <h4 className="font-medium text-[#f7f3ff]">{voice.name}</h4>
+                    <div className="mb-1 flex items-center gap-2">
+                      <Radio className="h-4 w-4 text-[#cfc8ff]" />
+                      <h4 className="text-sm font-medium text-[#f7f3ff]">{voice.name}</h4>
                     </div>
-                    <p className="ml-8 text-xs text-[#c6bdf3]">{voice.description}</p>
+                    <p className="ml-6 line-clamp-1 text-[11px] text-[#c6bdf3]">{voice.description}</p>
                   </button>
                 ))}
               </div>
@@ -299,18 +297,17 @@ export function VoiceSelectionFixed() {
               {userVoices.length > 0 && (
                 <>
                   <h4 className="mb-3 text-md font-medium text-[#f7f3ff]">我的克隆音色</h4>
-                  <div className="mb-6 grid grid-cols-2 gap-4">
+                  <div className="mb-4 grid grid-cols-3 gap-3">
                     {userVoices.map((voice) => (
                       <button
                         key={voice.voiceId}
                         onClick={() => handleVoiceSelect(voice.voiceId)}
-                        className={`rounded-lg border-2 p-4 text-left transition-colors ${selectedVoice === voice.voiceId ? "border-[#8a78b7] bg-[#63549f]/20" : "border-[#6b75c9]/25 bg-[#312752]/50 hover:border-[#6b75c9]"}`}
+                        className={`rounded-lg border-2 px-3 py-2 text-left transition-colors ${selectedVoice === voice.voiceId ? "border-[#8a78b7] bg-[#63549f]/20" : "border-[#6b75c9]/25 bg-[#312752]/50 hover:border-[#6b75c9]"}`}
                       >
-                        <div className="mb-2 flex items-center gap-3">
-                          <User className="h-5 w-5 text-[#cfc8ff]" />
-                          <h4 className="font-medium text-[#f7f3ff]">{voice.voiceName}</h4>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-[#cfc8ff]" />
+                          <h4 className="text-sm font-medium text-[#f7f3ff]">{voice.voiceName}</h4>
                         </div>
-                        <p className="ml-8 text-xs text-[#c6bdf3]">克隆音色</p>
                       </button>
                     ))}
                   </div>
@@ -318,14 +315,14 @@ export function VoiceSelectionFixed() {
               )}
 
               <h4 className="mb-3 text-md font-medium text-[#f7f3ff]">录制新音色</h4>
-              <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/30 p-4">
-                <div className="flex items-center gap-3 mb-3">
+              <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/30 p-3">
+                <div className="mb-2 flex items-center gap-3">
                   <Mic className="h-5 w-5 text-[#cfc8ff]" />
                   <span className="text-sm text-[#c6bdf3]">录制新音色并在声音实验室管理</span>
                 </div>
                 <Link
                   to="/voice-lab"
-                  className="flex items-center justify-center gap-2 rounded-lg bg-[#63549f] py-2 text-sm text-[#faf8ff] transition-colors hover:bg-[#6b75c9]"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-[#63549f] py-1.5 text-sm text-[#faf8ff] transition-colors hover:bg-[#6b75c9]"
                 >
                   <Mic className="h-4 w-4" />
                   前往声音实验室
@@ -335,7 +332,7 @@ export function VoiceSelectionFixed() {
               <button
                 onClick={handleVoiceSynthesis}
                 disabled={loading || (!selectedVoice && !useCustomVoice)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#63549f] py-3 text-[#faf8ff] transition-colors hover:bg-[#6b75c9] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#63549f] py-2 text-[#faf8ff] transition-colors hover:bg-[#6b75c9] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save className="h-5 w-5" />
                 {loading ? "合成中..." : "合成语音"}
@@ -353,7 +350,7 @@ export function VoiceSelectionFixed() {
               <button
                 onClick={handleSpeedAdjust}
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#63549f] py-3 text-[#faf8ff] transition-colors hover:bg-[#6b75c9] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#63549f] py-2 text-[#faf8ff] transition-colors hover:bg-[#6b75c9] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Volume2 className="h-5 w-5" />
                 {loading ? "调节中..." : "调节语速"}

@@ -279,7 +279,8 @@ export function Home() {
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
           <div className="md:w-1/2 mb-8 md:mb-0">
-            <span className="inline-block px-3 py-1 bg-purple-600/20 text-purple-300 rounded-full text-sm font-medium mb-4">NEW FEATURE</span>
+            <span className="inline-block px-3 py-1 bg-purple-600/20 text-purple-300 rounded-full text-sm font-medium mb-4">梦境编织者</span>
+            {/* <span className="inline-block px-3 py-1 bg-purple-600/20 text-purple-300 rounded-full text-sm font-medium mb-4">NEW FEATURE</span> */}
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               AI 合成
               <br />

@@ -12,6 +12,7 @@ interface Story {
   content: string;
   createdAt: string;
   hasVoice: boolean;
+  aiGenerated?: boolean;
   hasImage?: boolean;
   hasVideo?: boolean;
   voiceType?: string;
@@ -182,11 +183,11 @@ export function StoryDetailLogoSynced() {
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#63549f]"><span className="text-sm font-medium">1</span></div>
-                    <h4 className="font-medium text-[#f4f0ff]">AI 生成故事</h4>
+                    <h4 className="font-medium text-[#f4f0ff]">{story.aiGenerated ? "AI 生成故事" : "我的故事"}</h4>
                   </div>
                   <div className="h-3 w-3 rounded-full bg-green-500"></div>
                 </div>
-                <button onClick={() => setEditing(!editing)} className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63]"><Edit className="h-4 w-4" />编辑生成结果</button>
+                <button onClick={() => setEditing(!editing)} className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#eee9ff] transition-colors hover:bg-[#3a2d63]"><Edit className="h-4 w-4" />{story.aiGenerated ? "编辑生成结果" : "编辑故事内容"}</button>
               </div>
               <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 p-4">
                 <div className="mb-3 flex items-center justify-between">
@@ -253,7 +254,7 @@ export function StoryDetailLogoSynced() {
                 <div className="mb-4 flex items-center gap-3">
                   <h1 className="text-3xl font-bold text-[#faf8ff]">{story.title}</h1>
                   <button onClick={() => setEditing(!editing)} className="rounded-lg bg-[#312752] p-2 transition-colors hover:bg-[#3a2d63]" title="修改故事名称"><Edit className="h-5 w-5" /></button>
-                  <span className="rounded-full bg-[#63549f]/25 px-3 py-1 text-xs font-medium text-[#ddd6ff]">AI 生成</span>
+                  <span className="rounded-full bg-[#63549f]/25 px-3 py-1 text-xs font-medium text-[#ddd6ff]">{story.aiGenerated ? "AI 生成" : "手动创建"}</span>
                 </div>
                 <div className="mb-6 flex items-center gap-2"><span className="text-sm text-[#c6bdf3]">阅读时长：2分钟</span></div>
                 <div className="mb-6 overflow-hidden rounded-xl border border-[#63549f]/30 bg-[#231c40]/45">
