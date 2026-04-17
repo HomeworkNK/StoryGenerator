@@ -77,7 +77,7 @@ export function HomeFixed() {
     if (token) {
       const fetchUserInfo = async () => {
         try {
-          const response = await api.user.getInfo(token);
+          const response = await api.user.getProfile(token);
           if (response.success) {
             const nextUser = normalizeUser(response.user);
             setUser(nextUser);
@@ -141,8 +141,9 @@ export function HomeFixed() {
     const nextUser = normalizeUser(editingUser);
 
     try {
-      const response = await api.user.updateInfo(
+      const response = await api.user.updateProfile(
         {
+          username: nextUser.username,
           email: nextUser.email,
           avatar: nextUser.avatar,
         },
@@ -234,7 +235,7 @@ export function HomeFixed() {
           <div className="flex items-center gap-6">
             <Link to="/" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">书库首页</Link>
             <Link to="/" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">创作工坊</Link>
-            <Link to="/" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">声音实验室</Link>
+            <Link to="/voice-lab" className="text-sm text-[#d9d0ff] transition-colors hover:text-white">声音实验室</Link>
             <span className="text-sm text-[#a7a8b7]">{displayUser.username}</span>
 
             <button

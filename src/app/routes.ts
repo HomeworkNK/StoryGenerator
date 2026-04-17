@@ -5,6 +5,7 @@ import { RegisterCentered } from "./components/RegisterCentered";
 import { CreateStoryWideClean } from "./components/CreateStoryWideClean";
 import { StoryDetailLogoSynced } from "./components/StoryDetailLogoSynced";
 import { VoiceSelectionFixed } from "./components/VoiceSelectionFixed";
+import { VoiceLab } from "./components/VoiceLab";
 
 export const router = createBrowserRouter([
   {
@@ -30,5 +31,9 @@ export const router = createBrowserRouter([
   {
     path: "/voice/:id",
     Component: VoiceSelectionFixed,
+  },
+  {
+    path: "/voice-lab",
+    Component: VoiceLab,
   },
 ]);

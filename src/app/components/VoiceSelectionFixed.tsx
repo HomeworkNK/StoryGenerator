@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router";
-import { BookOpen, X, Radio, Volume2, Save, Clipboard, Sparkles } from "lucide-react";
+import { BookOpen, X, Radio, Volume2, Save, Clipboard, Sparkles, User, Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
 
@@ -21,11 +21,18 @@ interface VoiceStyle {
   description: string;
 }
 
+interface UserVoice {
+  voiceId: string;
+  voiceName: string;
+  default: boolean;
+}
+
 export function VoiceSelectionFixed() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [selectedVoice, setSelectedVoice] = useState("");
   const [voiceStyles, setVoiceStyles] = useState<VoiceStyle[]>([]);
+  const [userVoices, setUserVoices] = useState<UserVoice[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [hasRecorded, setHasRecorded] = useState(false);
   const [useCustomVoice, setUseCustomVoice] = useState(false);
@@ -40,6 +47,7 @@ export function VoiceSelectionFixed() {
   useEffect(() => {
     if (id) {
       fetchVoiceStyles();
+      fetchUserVoices();
     }
   }, [id]);
 
@@ -59,6 +67,19 @@ export function VoiceSelectionFixed() {
         { id: "voice-3", name: "温柔女声", description: "温柔、细腻、轻盈" },
         { id: "voice-4", name: "磁性男声", description: "沉稳、磁性、成熟" },
       ]);
+    }
+  };
+
+  const fetchUserVoices = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await api.user.getAudioList(token);
+      if (response.success && response.data) {
+        setUserVoices(response.data);
+      }
+    } catch (err) {
+      console.error("获取用户音频列表失败:", err);
     }
   };
 
@@ -270,29 +291,42 @@ export function VoiceSelectionFixed() {
                     <p className="ml-8 text-xs text-[#c6bdf3]">{voice.description}</p>
                   </button>
                 ))}
+              </div>
 
-                <button
-                  onClick={isRecording ? handleStopRecording : handleStartRecording}
-                  className={`rounded-lg border-2 p-4 text-left transition-colors ${useCustomVoice ? "border-[#8a78b7] bg-[#63549f]/20" : "border-[#6b75c9]/25 bg-[#312752]/50 hover:border-[#6b75c9]"}`}
-                >
-                  <div className="mb-2 flex items-center gap-3">
-                    <Radio className="h-5 w-5 text-[#cfc8ff]" />
-                    <h4 className="font-medium text-[#f7f3ff]">克隆音色</h4>
+              {userVoices.length > 0 && (
+                <>
+                  <h4 className="mb-3 text-md font-medium text-[#f7f3ff]">我的克隆音色</h4>
+                  <div className="mb-6 grid grid-cols-2 gap-4">
+                    {userVoices.map((voice) => (
+                      <button
+                        key={voice.voiceId}
+                        onClick={() => handleVoiceSelect(voice.voiceId)}
+                        className={`rounded-lg border-2 p-4 text-left transition-colors ${selectedVoice === voice.voiceId ? "border-[#8a78b7] bg-[#63549f]/20" : "border-[#6b75c9]/25 bg-[#312752]/50 hover:border-[#6b75c9]"}`}
+                      >
+                        <div className="mb-2 flex items-center gap-3">
+                          <User className="h-5 w-5 text-[#cfc8ff]" />
+                          <h4 className="font-medium text-[#f7f3ff]">{voice.voiceName}</h4>
+                        </div>
+                        <p className="ml-8 text-xs text-[#c6bdf3]">克隆音色</p>
+                      </button>
+                    ))}
                   </div>
-                  <p className="ml-8 text-xs text-[#c6bdf3]">使用你自己的声音进行配音</p>
+                </>
+              )}
 
-                  {isRecording ? (
-                    <div className="mt-4" style={waveAnimation}>
-                      {[...Array(5)].map((_, index) => (
-                        <div key={index} style={waveBarStyle(index)}></div>
-                      ))}
-                    </div>
-                  ) : hasRecorded ? (
-                    <div className="mt-4 rounded bg-green-500/20 p-2 text-xs text-green-200">录音完成，点击合成语音即可使用克隆音色</div>
-                  ) : (
-                    <div className="mt-4 rounded bg-[#6b75c9]/12 p-2 text-xs text-[#ddd6ff]">点击开始录音，说一段话让 AI 克隆你的声音</div>
-                  )}
-                </button>
+              <h4 className="mb-3 text-md font-medium text-[#f7f3ff]">录制新音色</h4>
+              <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/30 p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <Mic className="h-5 w-5 text-[#cfc8ff]" />
+                  <span className="text-sm text-[#c6bdf3]">录制新音色并在声音实验室管理</span>
+                </div>
+                <Link
+                  to="/voice-lab"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-[#63549f] py-2 text-sm text-[#faf8ff] transition-colors hover:bg-[#6b75c9]"
+                >
+                  <Mic className="h-4 w-4" />
+                  前往声音实验室
+                </Link>
               </div>
 
               <button

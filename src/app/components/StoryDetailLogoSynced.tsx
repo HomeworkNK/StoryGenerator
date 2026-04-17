@@ -153,6 +153,16 @@ export function StoryDetailLogoSynced() {
                 </div>
                 <button className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#bdb5e7]" disabled><Video className="h-4 w-4" />生成图片</button>
               </div>
+              <div className="rounded-xl border border-[#63549f]/30 bg-[#231c40]/45 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6b75c9]"><span className="text-sm font-medium">4</span></div>
+                    <h4 className="font-medium text-[#f4f0ff]">AI 生成视频</h4>
+                  </div>
+                  <div className="h-3 w-3 rounded-full bg-gray-500"></div>
+                </div>
+                <button className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#312752] py-2 text-sm text-[#bdb5e7]" disabled><Video className="h-4 w-4" />生成视频</button>
+              </div>
             </div>
           </div>
 

@@ -22,11 +22,8 @@ export function Login() {
         password: password,
       });
 
-      if (response.success) {
-        // 存储token
+      if (response.success && response.token) {
         localStorage.setItem("token", response.token);
-        // 存储用户信息
-        localStorage.setItem("user", JSON.stringify(response.user));
         const redirect = searchParams.get("redirect") || "/";
         navigate(redirect);
       } else {

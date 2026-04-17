@@ -27,17 +27,7 @@ export function RegisterCentered() {
     try {
       const response = await api.user.register({ username: username.trim(), password, email: email.trim() });
       if (response.success) {
-        localStorage.setItem("token", response.token);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            ...response.user,
-            avatar: response.user?.avatar || avatar,
-            username: response.user?.username || username.trim(),
-            nickname: response.user?.nickname || username.trim(),
-          }),
-        );
-        navigate("/");
+        navigate("/login");
       } else {
         setError(response.message || "注册失败");
       }

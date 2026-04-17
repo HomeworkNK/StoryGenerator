@@ -36,11 +36,7 @@ export function Register() {
       });
 
       if (response.success) {
-        // 存储token
-        localStorage.setItem("token", response.token);
-        // 存储用户信息
-        localStorage.setItem("user", JSON.stringify(response.user));
-        navigate("/");
+        navigate("/login");
       } else {
         setError(response.message || "注册失败");
       }

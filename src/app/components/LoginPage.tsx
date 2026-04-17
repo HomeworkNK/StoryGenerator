@@ -22,9 +22,8 @@ export function LoginPage() {
         password,
       });
 
-      if (response.success) {
+      if (response.success && response.token) {
         localStorage.setItem("token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
         const redirect = searchParams.get("redirect") || "/";
         navigate(redirect);
       } else {

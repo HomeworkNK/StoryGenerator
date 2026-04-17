@@ -40,7 +40,7 @@ export function Home() {
     if (token) {
       const fetchUserInfo = async () => {
         try {
-          const response = await api.user.getInfo(token);
+          const response = await api.user.getProfile(token);
           if (response.success) {
             setUser(response.user);
             setEditingUser(response.user);
@@ -101,8 +101,9 @@ export function Home() {
     setError("");
 
     try {
-      const response = await api.user.updateInfo(
+      const response = await api.user.updateProfile(
         {
+          username: editingUser.username,
           email: editingUser.email,
           avatar: editingUser.avatar
         },
@@ -150,7 +151,7 @@ export function Home() {
           <div className="flex items-center gap-6">
             <Link to="/" className="text-sm hover:text-purple-300 transition-colors">书藏馆</Link>
             <Link to="/" className="text-sm hover:text-purple-300 transition-colors">创作工坊</Link>
-            <Link to="/" className="text-sm hover:text-purple-300 transition-colors">声音实验室</Link>
+            <Link to="/voice-lab" className="text-sm hover:text-purple-300 transition-colors">声音实验室</Link>
             <Link to="/" className="text-sm hover:text-purple-300 transition-colors">访客宝贝</Link>
             
             <div className="relative">

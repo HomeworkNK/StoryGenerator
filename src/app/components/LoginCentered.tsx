@@ -17,9 +17,13 @@ export function LoginCentered() {
     setError("");
     try {
       const response = await api.user.login({ username: username.trim(), password });
-      if (response.success) {
+      if (response.success && response.token) {
         localStorage.setItem("token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
+        // 尝试获取用户信息并保存
+        const profileResponse = await api.user.getProfile(response.token);
+        if (profileResponse.success && profileResponse.user) {
+          localStorage.setItem("user", JSON.stringify(profileResponse.user));
+        }
         const redirect = searchParams.get("redirect") || "/";
         navigate(redirect);
       } else {
