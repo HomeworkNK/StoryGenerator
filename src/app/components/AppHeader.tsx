@@ -1,11 +1,12 @@
 import { Link } from "react-router";
 import { BookOpen, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { UserProfileModal } from "./UserProfileModal";
 
 type HeaderTab = "home" | "create" | "voice";
 
 interface AppHeaderProps {
   activeTab: HeaderTab;
-  onAvatarClick?: () => void;
 }
 
 function getUserInfo() {
@@ -30,8 +31,19 @@ function navClass(isActive: boolean) {
   }`;
 }
 
-export function AppHeader({ activeTab, onAvatarClick }: AppHeaderProps) {
-  const user = getUserInfo();
+export function AppHeader({ activeTab }: AppHeaderProps) {
+  const [user, setUser] = useState(getUserInfo());
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  useEffect(() => {
+    const refresh = () => setUser(getUserInfo());
+    window.addEventListener("storage", refresh);
+    window.addEventListener("user-profile-updated", refresh);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("user-profile-updated", refresh);
+    };
+  }, []);
 
   return (
     <header className="border-b border-[#6b75c9]/20 bg-[#111209]/88 backdrop-blur-sm">
@@ -50,10 +62,10 @@ export function AppHeader({ activeTab, onAvatarClick }: AppHeaderProps) {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-[#a7a8b7]">{user.name}</span>
+          <button type="button" onClick={() => setShowProfileModal(true)} className="text-sm text-[#a7a8b7] transition-colors hover:text-[#e4ddff]">{user.name}</button>
           <button
             type="button"
-            onClick={onAvatarClick}
+            onClick={() => setShowProfileModal(true)}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-[#63549f]/40 transition-colors hover:bg-[#63549f]/65"
           >
             {user.avatar ? (
@@ -64,6 +76,7 @@ export function AppHeader({ activeTab, onAvatarClick }: AppHeaderProps) {
           </button>
         </div>
       </div>
+      <UserProfileModal open={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </header>
   );
 }

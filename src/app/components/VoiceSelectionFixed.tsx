@@ -1,7 +1,8 @@
 import { Link, useNavigate, useParams } from "react-router";
-import { BookOpen, X, Radio, Volume2, Save, Clipboard, Sparkles, User, Mic } from "lucide-react";
+import { X, Radio, Volume2, Save, Clipboard, Sparkles, User, Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
+import { AppHeader } from "./AppHeader";
 
 const style = document.createElement("style");
 style.textContent = `
@@ -152,16 +153,26 @@ export function VoiceSelectionFixed() {
 
       if (response.success) {
         const storedStories = localStorage.getItem("stories");
-        if (storedStories) {
-          const stories = JSON.parse(storedStories);
-          const storyIndex = stories.findIndex((s: { id: string }) => s.id === id);
-          if (storyIndex !== -1) {
-            stories[storyIndex].hasVoice = true;
-            stories[storyIndex].voiceType = useCustomVoice ? "custom" : selectedVoice;
-            stories[storyIndex].audioId = response.data.audioId;
-            localStorage.setItem("stories", JSON.stringify(stories));
-          }
+        const stories = storedStories ? JSON.parse(storedStories) : [];
+        const storyIndex = stories.findIndex((s: { id: string }) => s.id === id);
+        const nextAudioId = response.data?.audioId || `audio_${Date.now()}`;
+        if (storyIndex !== -1) {
+          stories[storyIndex].hasVoice = true;
+          stories[storyIndex].voiceType = useCustomVoice ? "custom" : selectedVoice;
+          stories[storyIndex].audioId = nextAudioId;
+        } else {
+          stories.unshift({
+            id,
+            title: "未命名故事",
+            summary: "",
+            content: "",
+            createdAt: new Date().toISOString(),
+            hasVoice: true,
+            voiceType: useCustomVoice ? "custom" : selectedVoice,
+            audioId: nextAudioId,
+          });
         }
+        localStorage.setItem("stories", JSON.stringify(stories));
         navigate(`/story/${id}`);
       } else {
         setError(response.message || "语音合成失败");
@@ -230,17 +241,9 @@ export function VoiceSelectionFixed() {
     }) as const;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#111209]/95 text-[#f3efff] backdrop-blur-sm">
-      <div className="mx-6 w-full max-w-4xl">
-        <div className="mb-8 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#63549f]">
-              <BookOpen className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-[#f3efff]">梦境编织者</span>
-          </Link>
-        </div>
-
+    <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-[#f3efff]">
+      <AppHeader activeTab="create" />
+      <main className="mx-auto max-w-7xl px-6 py-8">
         <div className="mx-auto max-w-3xl rounded-xl border border-[#6b75c9]/30 bg-[#231c40] p-8 shadow-2xl shadow-black/20">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-[#faf7ff]">音频处理</h2>
@@ -358,7 +361,7 @@ export function VoiceSelectionFixed() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

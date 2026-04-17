@@ -62,7 +62,17 @@ export function StoryDetailLogoSynced() {
     try {
       const response = await api.story.get(storyId, token);
       if (response.success && response.data) {
-        applyStory(response.data);
+        const mergedStory = {
+          ...(localStory || {}),
+          ...response.data,
+          id: storyId,
+          hasVoice: response.data.hasVoice ?? localStory?.hasVoice ?? false,
+          hasImage: response.data.hasImage ?? localStory?.hasImage ?? false,
+          hasVideo: response.data.hasVideo ?? localStory?.hasVideo ?? false,
+          voiceType: response.data.voiceType ?? localStory?.voiceType,
+          cover: response.data.cover ?? localStory?.cover,
+        };
+        applyStory(mergedStory as Story);
       } else if (!localStory) {
         setError(response.message || "故事不存在");
       }

@@ -96,7 +96,7 @@ export function CreateStoryWideClean() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#111209]/95 text-[#f2efff] backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-[#f2efff]">
       <div className="w-full">
         <AppHeader activeTab="create" />
 

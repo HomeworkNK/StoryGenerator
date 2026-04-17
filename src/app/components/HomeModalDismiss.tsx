@@ -179,7 +179,7 @@ export function HomeModalDismiss() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#111209] via-[#231c40] to-[#111209] text-white">
-      <AppHeader activeTab="home" onAvatarClick={() => setShowUserModal(true)} />
+      <AppHeader activeTab="home" />
 
       {showUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8" onClick={closeModal}>
